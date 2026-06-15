@@ -1,0 +1,142 @@
+{
+  "siteName": "HIACEH.ID",
+  "siteDescription": "Cermat Mendata, Cerdas Mengulas",
+  "siteLogo": "/uploads/1781188399006-logo.png",
+  "contactEmail": "redaksi@hiaceh.comsss",
+  "address": "Banda Aceh, Aceh, Indonesia",
+  "phoneNumber": "081361527454",
+  "faxNumber": "",
+  "socialFacebook": "https://facebook.com/hiaceh",
+  "socialInstagram": "https://instagram.com/monhadzan",
+  "socialTwitter": "https://twitter.com/hiaceh",
+  "socialYoutube": "https://youtube.com/hiaceh",
+  "headerLogo": "",
+  "headerShowSlogan": false,
+  "navbarCategories": [
+    {
+      "name": "ACEH",
+      "slug": "aceh",
+      "visible": true
+    },
+    {
+      "name": "INDONESIA",
+      "slug": "indonesia",
+      "visible": true
+    },
+    {
+      "name": "POLITIK",
+      "slug": "politik",
+      "visible": true
+    },
+    {
+      "name": "EKONOMI",
+      "slug": "ekonomi",
+      "visible": true
+    },
+    {
+      "name": "BUDAYA",
+      "slug": "budaya",
+      "visible": true
+    },
+    {
+      "name": "WISATA",
+      "slug": "wisata",
+      "visible": true
+    },
+    {
+      "name": "KESEHATAN",
+      "slug": "kesehatan",
+      "visible": true
+    },
+    {
+      "name": "GAYA HIDUP",
+      "slug": "gaya-hidup",
+      "visible": true
+    },
+    {
+      "name": "GLOBAL",
+      "slug": "global",
+      "visible": true
+    },
+    {
+      "name": "TEKNOLOGI",
+      "slug": "teknologi",
+      "visible": true
+    },
+    {
+      "name": "OLAHRAGA",
+      "slug": "olahraga",
+      "visible": true
+    },
+    {
+      "name": "HIBURAN",
+      "slug": "hiburan",
+      "visible": true
+    },
+    {
+      "name": "DAERAH",
+      "slug": "daerah",
+      "visible": true
+    },
+    {
+      "name": "NASIONAL",
+      "slug": "nasional",
+      "visible": true
+    }
+  ],
+  "footerLogo": "",
+  "footerDescription": "Portal Berita Aceh & Indonesia Terkini",
+  "footerShowCategories": [
+    {
+      "name": "Aceh",
+      "slug": "aceh"
+    },
+    {
+      "name": "Ekonomi",
+      "slug": "ekonomi"
+    },
+    {
+      "name": "Global",
+      "slug": "global"
+    },
+    {
+      "name": "Politik",
+      "slug": "politik"
+    },
+    {
+      "name": "Indonesia",
+      "slug": "indonesia"
+    },
+    {
+      "name": "Nasional",
+      "slug": "nasional"
+    },
+    {
+      "name": "Wisata",
+      "slug": "wisata"
+    },
+    {
+      "name": "Kesehatan",
+      "slug": "kesehatan"
+    },
+    {
+      "name": "Budaya",
+      "slug": "budaya"
+    }
+  ],
+  "footerShowPages": [
+    "about",
+    "redaksi",
+    "disclaimer",
+    "pedoman-media",
+    "privacy-policy",
+    "terms-of-service"
+  ],
+  "footerSocialTitle": "IKUTI MEDIA SOSIAL",
+  "footerSocialDescription": "Tetap terhubung dengan kabar terkini dari Aceh dan Indonesia melalui saluran media sosial kami.",
+  "favicon": "/uploads/1781188399006-logo.png",
+  "seoTitle": "Hi Aceh - Portal Berita Aceh & Indonesia",
+  "seoDescription": "Portal berita terkini dari Aceh dan Indonesia",
+  "seoKeywords": "aceh, berita aceh, portal aceh, indonesia",
+  "googleAnalyticsId": ""
+}

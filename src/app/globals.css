@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Define custom variant in Tailwind v4 to look for manual .dark class selector */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #187957;
+  --color-primary-dark: #0f533b;
+  --color-brand-green: #187957;
+  --color-brand-green-dark: #0f533b;
+  --color-aceh-green: #0f392b;
+  --color-aceh-green-light: #2e7d32;
+  --color-background-light: #F3F4F6;
+  --color-background-dark: #111827;
+  --color-surface-light: #FFFFFF;
+  --color-surface-dark: #1F2937;
+  --color-text-light: #1F2937;
+  --color-text-dark: #F9FAFB;
+  --color-text-muted-light: #6B7280;
+  --color-text-muted-dark: #9CA3AF;
+  
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-oswald), sans-serif;
+  
+  --spacing-128: 32rem;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #09090b;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom minimal scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+}
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+

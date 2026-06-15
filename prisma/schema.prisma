@@ -1,0 +1,231 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  PENULIS
+}
+
+enum ArticleType {
+  TEKS
+  FOTO
+  VIDEO
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  SCHEDULED
+}
+
+enum AdLocation {
+  HEADER_TOP
+  FOOTER_BOTTOM
+  STICKY_BOTTOM
+  ARTICLE_ABOVE_TITLE
+  ARTICLE_BELOW_IMAGE
+  ARTICLE_IN_CONTENT
+  ARTICLE_END
+  FEED_INLINE_1
+  FEED_INLINE_2
+  SIDEBAR
+}
+
+enum AdType {
+  IMAGE_BANNER
+  CUSTOM_SCRIPT
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  name          String
+  password      String        // Hashed password
+  role          UserRole      @default(PENULIS)
+  bio           String?       @db.Text
+  avatarUrl     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  articles      Article[]     @relation("authoredArticles")
+  editedArticles Article[]    @relation("editedArticles")
+  uploadedMedia Media[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String   // e.g. "CREATE_ARTICLE", "DELETE_USER", "PUBLISH_ARTICLE"
+  description String   @db.Text
+  entityType  String?  // e.g. "Article", "User", "Category"
+  entityId    String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?    @db.Text
+  parentId    String?
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Self-referential relations (parent / children)
+  parent      Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryChildren")
+
+  // Other relations
+  articles    Article[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  articles  Article[] @relation("ArticleTags")
+
+  @@map("tags")
+}
+
+model Media {
+  id           String    @id @default(uuid())
+  url          String    @db.Text
+  filename     String
+  mimeType     String
+  size         Int
+  uploadedById String
+  createdAt    DateTime  @default(now())
+
+  // Relations
+  uploadedBy  User      @relation(fields: [uploadedById], references: [id])
+  articles    Article[] @relation("FeaturedImage")
+
+  @@map("media")
+}
+
+model Article {
+  id              String        @id @default(uuid())
+  title           String        @db.Text
+  slug            String        @unique
+  content         String        @db.LongText
+  excerpt         String?       @db.Text
+  type            ArticleType   @default(TEKS)
+  videoUrl        String?
+  status          ArticleStatus @default(DRAFT)
+  isBreaking      Boolean       @default(false)
+  isFeatured      Boolean       @default(false)
+  publishedAt     DateTime?
+  deletedAt       DateTime?     // For soft delete/trash bin
+  viewCount       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Foreign keys
+  authorId        String
+  editorId        String?
+  categoryId      String
+  featuredImageId String?
+  sumberName      String?
+  sumberUrl       String?
+
+  // Relations
+  author          User          @relation("authoredArticles", fields: [authorId], references: [id])
+  editor          User?         @relation("editedArticles", fields: [editorId], references: [id])
+  category        Category      @relation(fields: [categoryId], references: [id])
+  featuredImage   Media?        @relation("FeaturedImage", fields: [featuredImageId], references: [id], onDelete: SetNull)
+  tags            Tag[]         @relation("ArticleTags")
+  pageViews       PageView[]
+  comments        Comment[]
+
+  @@index([authorId])
+  @@index([editorId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("articles")
+}
+
+model Ad {
+  id          String     @id @default(uuid())
+  title       String
+  type        AdType     @default(IMAGE_BANNER)
+  location    AdLocation
+  
+  // Image Ad Fields
+  imageUrl    String?    @db.Text
+  linkUrl     String?    @db.Text
+  
+  // Custom Script Field
+  scriptCode  String?    @db.LongText
+
+  status      Boolean    @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  ratio       String?    @default("1:1")
+  impressions Int        @default(0)
+  clicks      Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("ads")
+}
+
+model PageView {
+  id        String   @id @default(uuid())
+  articleId String?
+  path      String
+  ipHash    String
+  userAgent String?  @db.Text
+  referrer  String?  @db.Text
+  viewedAt  DateTime @default(now())
+
+  // Relations
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([viewedAt])
+  @@map("page_views")
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  articleId   String
+  name        String
+  email       String?
+  body        String   @db.Text
+  isApproved  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([createdAt])
+  @@map("comments")
+}
