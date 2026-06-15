@@ -1,7 +1,22 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-const prisma = new PrismaClient();
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  throw new Error("DATABASE_URL must be set to run the seed script.");
+}
+
+const url = new URL(dbUrl);
+const adapter = new PrismaMariaDb({
+  host: url.hostname || "localhost",
+  port: url.port ? parseInt(url.port, 10) : 3306,
+  user: url.username || "root",
+  password: url.password || undefined,
+  database: url.pathname.replace(/^\//, ""),
+});
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
