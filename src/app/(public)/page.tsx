@@ -85,9 +85,9 @@ export default async function Home() {
   const heroArticles = [...featuredArticles, ...regularArticles].slice(0, 5);
 
   const editorsPicks = articles.slice(1, 5);
-  const trending = await getTrendingArticles(); // Sorted by viewCount, returns 6 articles
-  const featured = articles.slice(0, 8); // Just grabbing first 8 for grid
-  // Build a popular list by combining trending + featured, dedupe by slug, limit to 12
+  const trending = await getTrendingArticles();
+  const featured = articles.slice(0, 20);
+
   const seen = new Set();
   const popularList = [];
   for (const a of [...(trending || []), ...(featured || [])]) {
@@ -97,7 +97,7 @@ export default async function Home() {
     popularList.push(a);
     if (popularList.length >= 12) break;
   }
-  // Ensure popularList has enough items for the sidebar visual (fill empty space)
+
   const minPopular = 12;
   if (popularList.length < minPopular) {
     const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -125,30 +125,46 @@ export default async function Home() {
       dummyIdx++;
     }
   }
-  const politicsArticles = articles.filter(
-    (a) => a.categorySlug === "politik" || a.category.toLowerCase() === "politik"
+
+  const settingsRes = await fetch(new URL("/api/settings", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"), { cache: "no-store" });
+  const settings = settingsRes.ok
+    ? await settingsRes.json()
+    : { featuredBriefsCategory: "politik", navbarCategories: [] };
+  const featuredBriefsCategory = settings.featuredBriefsCategory || "politik";
+
+  const featuredBriefsArticles = articles.filter(
+    (a) =>
+      a.categorySlug === featuredBriefsCategory ||
+      a.category?.toLowerCase() === featuredBriefsCategory
   );
 
-  const categoryWidgets = [
-    "aceh",
-    "ekonomi",
-    "budaya",
-    "daerah",
-    "gaya-hidup",
-    "indonesia",
-    "kesehatan",
-    "wisata",
-  ].map((slug) => {
+  const featuredBriefsTitle =
+    featuredBriefsArticles[0]?.category ||
+    featuredBriefsCategory.charAt(0).toUpperCase() + featuredBriefsCategory.slice(1);
+
+  const visibleNavbarSlugs = (settings.navbarCategories || [])
+    .filter((cat) => cat.visible)
+    .map((cat) => cat.slug);
+
+  const categorySourceSlugs = visibleNavbarSlugs.length > 0
+    ? visibleNavbarSlugs
+    : Array.from(new Set(articles.map((a) => a.categorySlug)));
+
+  const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug) => {
     const categoryArticles = articles.filter((a) => a.categorySlug === slug);
+    const categoryNameFromSettings = (settings.navbarCategories || []).find((cat) => cat.slug === slug)?.name;
     return {
       slug,
-      title: categoryArticles[0]?.category || slug.charAt(0).toUpperCase() + slug.slice(1),
+      title:
+        categoryArticles[0]?.category ||
+        categoryNameFromSettings ||
+        slug.charAt(0).toUpperCase() + slug.slice(1),
       image:
         categoryArticles[0]?.image ||
         `https://picsum.photos/seed/${slug}/1200/800`,
       articles: categoryArticles.slice(0, 4),
     };
-  }).filter((item) => item.articles.length > 0);
+  });
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex flex-col font-sans">
@@ -158,23 +174,33 @@ export default async function Home() {
       <BreakingNews />
 
       <div className="w-full max-w-screen-2xl mx-auto px-4 py-8 flex-grow">
+
         {/* Top Section: Editors Picks, Main News, Trending */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 mb-12">
+          {/* Desktop only: Editors Picks left column */}
           <div className="hidden lg:block lg:col-span-3">
             <EditorsPicks articles={editorsPicks} />
           </div>
-          <div className="lg:col-span-6 order-first lg:order-none">
+
+          {/* Main carousel — always first on mobile */}
+          <div className="lg:col-span-6 order-1 lg:order-none">
             <MainNews articles={heroArticles} />
           </div>
-          {/* TrendingNow: always visible now, not hidden on mobile */}
-          <div className="lg:col-span-3">
+
+          {/* Mobile only: Berita Terbaru (FeaturedPosts) appears after carousel */}
+          <div className="block lg:hidden order-2">
+            <FeaturedPosts articles={featured.slice(0, 20)} />
+          </div>
+
+          {/* Trending — after Berita Terbaru on mobile, right column on desktop */}
+          <div className="lg:col-span-3 order-3 lg:order-none">
             <TrendingNow articles={trending} />
           </div>
         </div>
 
-        {/* Featured Posts + Popular widget — Popular hidden on mobile */}
+        {/* Featured Posts + Popular widget — desktop only */}
         <div className="mb-12 flex flex-col-reverse lg:grid lg:grid-cols-12 gap-6 items-stretch">
-          <div className="lg:col-span-8">
+          <div className="hidden lg:block lg:col-span-8">
             <FeaturedPosts articles={featured.slice(0, 6)} />
           </div>
           <div className="hidden lg:block lg:col-span-4">
@@ -182,9 +208,13 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Video Briefs Section (Politics category news) */}
+        {/* Featured Briefs Section */}
         <div className="mb-12">
-          <FeaturedBriefs articles={politicsArticles} />
+          <FeaturedBriefs
+            articles={featuredBriefsArticles}
+            categoryName={featuredBriefsTitle}
+            categorySlug={featuredBriefsCategory}
+          />
         </div>
 
         {/* Category widgets */}

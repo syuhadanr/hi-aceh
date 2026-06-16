@@ -50,7 +50,7 @@ export default function MediaPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/media");
+      const res = await fetch("/api/admin/media", { credentials: "same-origin" });
       if (res.ok) {
         const data = await res.json();
         setMediaList(data);
@@ -100,6 +100,7 @@ export default function MediaPage() {
     try {
       const res = await fetch("/api/admin/media", {
         method: "POST",
+        credentials: "same-origin",
         body: formData,
       });
 

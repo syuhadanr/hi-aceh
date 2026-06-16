@@ -34,11 +34,13 @@ interface SystemSettings {
   socialFacebook: string;
   socialInstagram: string;
   socialTwitter: string;
+  socialTikTok: string;
   socialYoutube: string;
   // Header settings
   headerLogo: string;
   headerShowSlogan: boolean;
   navbarCategories: { name: string; slug: string; visible: boolean }[];
+  featuredBriefsCategory: string;
   // Footer settings
   footerLogo: string;
   footerDescription: string;
@@ -79,10 +81,12 @@ export default function SettingsPage() {
     socialFacebook: "",
     socialInstagram: "",
     socialTwitter: "",
+    socialTikTok: "",
     socialYoutube: "",
     headerLogo: "",
     headerShowSlogan: true,
     navbarCategories: [],
+    featuredBriefsCategory: "politik",
     footerLogo: "",
     footerDescription: "",
     footerShowCategories: [],
@@ -176,7 +180,7 @@ const fetchSettingsAndReconcile = async () => {
   const fetchMediaLibrary = async () => {
     setIsLoadingMedia(true);
     try {
-      const res = await fetch("/api/admin/media");
+      const res = await fetch("/api/admin/media", { credentials: "same-origin" });
       if (res.ok) {
         const data = await res.json();
         setMediaLibrary(data);
@@ -241,6 +245,7 @@ const fetchSettingsAndReconcile = async () => {
       try {
         const res = await fetch("/api/admin/media", {
           method: "POST",
+          credentials: "same-origin",
           body: formData,
         });
 
@@ -438,6 +443,36 @@ const fetchSettingsAndReconcile = async () => {
                         placeholder="Hi Aceh"
                         className="w-full text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3.5 py-2.5 text-zinc-900 dark:text-zinc-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors disabled:opacity-50"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+                        Kategori Featured Briefs
+                      </label>
+                      <select
+                        value={settings.featuredBriefsCategory}
+                        onChange={(e) =>
+                          setSettings((prev) => ({
+                            ...prev,
+                            featuredBriefsCategory: e.target.value,
+                          }))
+                        }
+                        disabled={!isAuthorized}
+                        className="w-full text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3.5 py-2.5 text-zinc-900 dark:text-zinc-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors disabled:opacity-50"
+                      >
+                        {allCategories.length > 0 ? (
+                          allCategories.map((cat) => (
+                            <option key={cat.slug} value={cat.slug}>
+                              {cat.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="politik">Politik</option>
+                        )}
+                      </select>
+                      <p className="text-[10px] text-zinc-400 mt-1">
+                        Pilih kategori yang akan ditampilkan di widget Featured Briefs di halaman utama.
+                      </p>
                     </div>
 
                     {/* Favicon configuration */}
@@ -715,6 +750,21 @@ const fetchSettingsAndReconcile = async () => {
                     }
                     disabled={!isAuthorized}
                     placeholder="https://youtube.com/c/..."
+                    className="w-full text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3.5 py-2.5 text-zinc-900 dark:text-zinc-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+                    TikTok Link
+                  </label>
+                  <input
+                    type="url"
+                    value={settings.socialTikTok}
+                    onChange={(e) =>
+                      setSettings((prev) => ({ ...prev, socialTikTok: e.target.value }))
+                    }
+                    disabled={!isAuthorized}
+                    placeholder="https://www.tiktok.com/@username"
                     className="w-full text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3.5 py-2.5 text-zinc-900 dark:text-zinc-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors disabled:opacity-50"
                   />
                 </div>

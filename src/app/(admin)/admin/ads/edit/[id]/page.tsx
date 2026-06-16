@@ -126,6 +126,7 @@ export default function EditAdPage() {
       try {
         const res = await fetch("/api/admin/media", {
           method: "POST",
+          credentials: "same-origin",
           body: formData,
         });
 

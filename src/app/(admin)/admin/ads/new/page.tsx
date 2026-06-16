@@ -83,6 +83,7 @@ export default function NewAdPage() {
       try {
         const res = await fetch("/api/admin/media", {
           method: "POST",
+          credentials: "same-origin",
           body: formData,
         });
 

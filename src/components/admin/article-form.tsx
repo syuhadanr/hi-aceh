@@ -106,7 +106,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
   const fetchMediaLibrary = async () => {
     setIsLoadingMedia(true);
     try {
-      const res = await fetch("/api/admin/media");
+      const res = await fetch("/api/admin/media", { credentials: "same-origin" });
       if (res.ok) {
         const data = await res.json();
         setMediaLibrary(data);

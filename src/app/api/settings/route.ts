@@ -15,10 +15,12 @@ const DEFAULT_SETTINGS = {
   socialFacebook: "https://facebook.com/hiaceh",
   socialInstagram: "https://instagram.com/hiaceh",
   socialTwitter: "https://twitter.com/hiaceh",
+  socialTikTok: "https://www.tiktok.com/@hiaceh",
   socialYoutube: "https://youtube.com/hiaceh",
   headerLogo: "",
   headerShowSlogan: true,
   navbarCategories: [],
+  featuredBriefsCategory: "politik",
   footerLogo: "",
   footerDescription: "Portal Berita Aceh & Indonesia Terkini",
   footerShowCategories: [

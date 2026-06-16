@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { db } from "src/lib/db";
-import DashboardChart from "src/components/admin/dashboard-chart";
+import { db } from "@/lib/db";
+import DashboardChart from "@/components/admin/dashboard-chart";
 import {
   FileText,
   Eye,
@@ -11,27 +11,25 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-export const revalidate = 0; // Disable static cache, always fetch fresh data
+export const revalidate = 0;
 
 export default async function DashboardPage() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  // Default values
   let totalArticles = 0;
   let articlesToday = 0;
   let visitorsToday = 0;
+  let onlineNow = 0;
   let popularArticles: any[] = [];
   let recentArticles: any[] = [];
   let chartData: any[] = [];
 
   try {
-    // 1. Total Articles Count
     totalArticles = await db.article.count({
       where: { deletedAt: null },
     });
 
-    // 2. Articles Created Today
     articlesToday = await db.article.count({
       where: {
         deletedAt: null,
@@ -39,14 +37,18 @@ export default async function DashboardPage() {
       },
     });
 
-    // 3. Visitors Today (page views)
     visitorsToday = await db.pageView.count({
       where: {
         viewedAt: { gte: startOfDay },
       },
     });
 
-    // 4. Popular Articles This Week
+    // Active visitors in last 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    onlineNow = await db.pageView.count({
+      where: { viewedAt: { gte: fiveMinutesAgo } },
+    });
+
     popularArticles = await db.article.findMany({
       where: { deletedAt: null },
       orderBy: { viewCount: "desc" },
@@ -62,7 +64,6 @@ export default async function DashboardPage() {
       },
     });
 
-    // 5. Recent Articles (last 5)
     recentArticles = await db.article.findMany({
       where: { deletedAt: null },
       orderBy: { createdAt: "desc" },
@@ -77,7 +78,6 @@ export default async function DashboardPage() {
       },
     });
 
-    // 6. Weekly Chart Data (aggregating page views by day)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -114,18 +114,13 @@ export default async function DashboardPage() {
 
       viewsForDay.forEach((pv) => {
         const ua = pv.userAgent?.toLowerCase() || "";
-        if (
-          ua.includes("mobi") ||
-          ua.includes("android") ||
-          ua.includes("iphone")
-        ) {
+        if (ua.includes("mobi") || ua.includes("android") || ua.includes("iphone")) {
           mobileCount++;
         } else {
           desktopCount++;
         }
       });
 
-      // Inject realistic mock values if there are no database views, so chart is not empty/barren
       return {
         day: dayStr,
         Desktop: hasRealViews ? desktopCount : Math.floor(Math.random() * 150) + 120,
@@ -133,11 +128,11 @@ export default async function DashboardPage() {
       };
     });
   } catch (error) {
-    console.warn("DB fetch failed, falling back to gorgeous mock indicators:", error);
-    // Graceful mock fallback in case schema or database is unpopulated or errors out
+    console.warn("DB fetch failed, falling back to mock data:", error);
     totalArticles = 184;
     articlesToday = 4;
     visitorsToday = 1432;
+    onlineNow = 14;
     popularArticles = [
       { id: "1", title: "Kopi Gayo Tembus Pasar Eropa, Permintaan Meningkat Tajam", viewCount: 1204, category: { name: "Ekonomi" } },
       { id: "2", title: "Wisata Sabang Kembali Dibuka untuk Turis Mancanegara", viewCount: 893, category: { name: "Wisata" } },
@@ -146,46 +141,11 @@ export default async function DashboardPage() {
       { id: "5", title: "Pemerintah Aceh Luncurkan Program Beasiswa Santri Unggulan", viewCount: 442, category: { name: "Pendidikan" } },
     ];
     recentArticles = [
-      {
-        id: "1",
-        title: "Kopi Gayo Tembus Pasar Eropa, Permintaan Meningkat Tajam",
-        status: "PUBLISHED",
-        createdAt: new Date(),
-        author: { name: "Budiman Redaksi" },
-        category: { name: "Ekonomi" },
-      },
-      {
-        id: "2",
-        title: "Draf Qanun Pariwisata Halal Mulai Disosialisasikan",
-        status: "PENDING",
-        createdAt: new Date(Date.now() - 3600000),
-        author: { name: "Siti Rahma" },
-        category: { name: "Politik" },
-      },
-      {
-        id: "3",
-        title: "Persiraja Banda Aceh Siap Hadapi Laga Perdana Liga 2",
-        status: "PUBLISHED",
-        createdAt: new Date(Date.now() - 7200000),
-        author: { name: "Ahmad Ilham" },
-        category: { name: "Olahraga" },
-      },
-      {
-        id: "4",
-        title: "Rencana Tata Ruang Kota Banda Aceh Direvisi",
-        status: "DRAFT",
-        createdAt: new Date(Date.now() - 14400000),
-        author: { name: "Budiman Redaksi" },
-        category: { name: "Daerah" },
-      },
-      {
-        id: "5",
-        title: "Pemerintah Aceh Luncurkan Program Beasiswa Santri Unggulan",
-        status: "SCHEDULED",
-        createdAt: new Date(Date.now() - 86400000),
-        author: { name: "Siti Rahma" },
-        category: { name: "Pendidikan" },
-      },
+      { id: "1", title: "Kopi Gayo Tembus Pasar Eropa, Permintaan Meningkat Tajam", status: "PUBLISHED", createdAt: new Date(), author: { name: "Budiman Redaksi" }, category: { name: "Ekonomi" } },
+      { id: "2", title: "Draf Qanun Pariwisata Halal Mulai Disosialisasikan", status: "PENDING", createdAt: new Date(Date.now() - 3600000), author: { name: "Siti Rahma" }, category: { name: "Politik" } },
+      { id: "3", title: "Persiraja Banda Aceh Siap Hadapi Laga Perdana Liga 2", status: "PUBLISHED", createdAt: new Date(Date.now() - 7200000), author: { name: "Ahmad Ilham" }, category: { name: "Olahraga" } },
+      { id: "4", title: "Rencana Tata Ruang Kota Banda Aceh Direvisi", status: "DRAFT", createdAt: new Date(Date.now() - 14400000), author: { name: "Budiman Redaksi" }, category: { name: "Daerah" } },
+      { id: "5", title: "Pemerintah Aceh Luncurkan Program Beasiswa Santri Unggulan", status: "SCHEDULED", createdAt: new Date(Date.now() - 86400000), author: { name: "Siti Rahma" }, category: { name: "Pendidikan" } },
     ];
 
     const daysOfWeek = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -200,12 +160,10 @@ export default async function DashboardPage() {
     });
   }
 
-  // Format numbers nicely
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("id-ID").format(num);
   };
 
-  // Stat Cards Configuration
   const stats = [
     {
       title: "Total Artikel",
@@ -233,8 +191,8 @@ export default async function DashboardPage() {
     },
     {
       title: "Pengunjung Online",
-      value: "14 Aktif",
-      description: "Realtime aktif di website",
+      value: `${onlineNow} Aktif`,
+      description: "Aktif dalam 5 menit terakhir",
       icon: Activity,
       iconColor: "text-rose-400",
       iconBg: "bg-rose-500/10 border-rose-500/20",

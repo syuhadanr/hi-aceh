@@ -6,7 +6,8 @@ import AdSlot from '@/components/ads/AdSlot';
 import { useState, useEffect } from 'react';
 
 export default function FeaturedPosts({ articles }) {
-    const list = (articles || []).slice(0, 6);
+    const list = (articles || []).slice(0, 6);        // desktop: always max 6
+    const mobileList = (articles || []).slice(0, 20); // mobile: up to 20
     const [feedAd, setFeedAd] = useState(null);
 
     useEffect(() => {
@@ -16,7 +17,7 @@ export default function FeaturedPosts({ articles }) {
             .catch(() => {});
     }, []);
 
-    if (!list || list.length === 0) return null;
+    if (!mobileList || mobileList.length === 0) return null;
 
     return (
         <section>
@@ -32,7 +33,7 @@ export default function FeaturedPosts({ articles }) {
 
             {/* Mobile: list with ad injected after 3rd item */}
             <div className="flex flex-col gap-6 sm:hidden">
-                {list.slice(0, 3).map((post, idx) => (
+                {mobileList.slice(0, 3).map((post, idx) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                             <Image src={post.image} alt={post.title} fill className="object-cover" />
@@ -60,7 +61,7 @@ export default function FeaturedPosts({ articles }) {
                     </div>
                 )}
 
-                {list.slice(3, 5).map((post, idx) => (
+                {mobileList.slice(3).map((post, idx) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                             <Image src={post.image} alt={post.title} fill className="object-cover" />

@@ -187,7 +187,7 @@ export default function HeaderNav({ activeCategory }) {
                             <img
                                 src={settings?.headerLogo || settings?.siteLogo || "/logo.png"}
                                 alt={settings?.siteName || "Hi Aceh"}
-                                className="h-18 lg:h-22 w-auto transition-all duration-300"
+                                className="h-16 lg:h-20 w-auto object-contain max-h-20 transition-all duration-300"
                             />
                         </div>
 
@@ -216,7 +216,7 @@ export default function HeaderNav({ activeCategory }) {
                             <img
                                 src={settings?.headerLogo || settings?.siteLogo || "/logo.png"}
                                 alt={settings?.siteName || "Hi Aceh"}
-                                className="h-18 w-auto transition-all duration-300"
+                                className="h-16 w-auto object-contain max-h-20 transition-all duration-300"
                             />
                           {settings?.headerShowSlogan && settings?.siteDescription && (
     <span className="text-white/80 text-[10px] font-medium tracking-widest italic mt-1 font-sans">
@@ -254,7 +254,7 @@ export default function HeaderNav({ activeCategory }) {
                         <img
                             src={settings?.headerLogo || settings?.siteLogo || "/logo.png"}
                             alt={settings?.siteName || "Hi Aceh"}
-                            className="h-12 w-auto"
+                            className="h-10 w-auto object-contain max-h-12"
                         />
                     </div>
 

@@ -5,10 +5,53 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 
+const MAX_IMAGE_SIZE = 200_000; // 200 KB target maximum
+const MIN_IMAGE_QUALITY = 35;
+const TARGET_IMAGE_WIDTH = 1200;
+
 // Ensure upload directory exists
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+async function compressImage(buffer: Buffer) {
+  const input = sharp(buffer).rotate();
+  const metadata = await input.metadata();
+  const format = metadata.format || "jpeg";
+  const width = metadata.width && metadata.width > TARGET_IMAGE_WIDTH ? TARGET_IMAGE_WIDTH : metadata.width;
+
+  let quality = 80;
+  let outputBuffer: Buffer;
+  let currentWidth = width;
+
+  const encode = async (q: number, w: number | undefined) => {
+    const pipeline = sharp(buffer).rotate().resize({ width: w, withoutEnlargement: true });
+    if (format === "png") {
+      return pipeline.png({ quality: q, effort: 6 }).toBuffer();
+    }
+    if (format === "webp") {
+      return pipeline.webp({ quality: q }).toBuffer();
+    }
+    return pipeline.jpeg({ quality: q }).toBuffer();
+  };
+
+  outputBuffer = await encode(quality, currentWidth);
+
+  while (outputBuffer.length > MAX_IMAGE_SIZE && quality > MIN_IMAGE_QUALITY) {
+    quality -= 10;
+    outputBuffer = await encode(quality, currentWidth);
+  }
+
+  while (outputBuffer.length > MAX_IMAGE_SIZE && currentWidth && currentWidth > 600) {
+    currentWidth = Math.max(600, Math.floor(currentWidth * 0.9));
+    outputBuffer = await encode(quality, currentWidth);
+  }
+
+  return {
+    buffer: outputBuffer,
+    format,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -47,7 +90,6 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer as ArrayBuffer) as unknown as Buffer;
-    const safeBuffer = buffer;
     const isImage = file.type.startsWith("image/");
 
     const timestamp = Date.now();
@@ -61,34 +103,18 @@ export async function POST(req: NextRequest) {
     let mimeType = file.type;
 
     if (isImage) {
-      const image = sharp(safeBuffer).rotate().resize({ width: 1200, withoutEnlargement: true });
-      const metadata = await image.metadata();
-      const format = metadata.format;
+      const { buffer: compressedBuffer, format } = await compressImage(buffer);
+      outputBuffer = compressedBuffer;
 
       if (format === "png") {
         extension = ".png";
         mimeType = "image/png";
-        outputBuffer = await image.png({ quality: 80, effort: 6 }).toBuffer();
       } else if (format === "webp") {
         extension = ".webp";
         mimeType = "image/webp";
-        outputBuffer = await image.webp({ quality: 80 }).toBuffer();
       } else {
         extension = ".jpg";
         mimeType = "image/jpeg";
-        outputBuffer = await image.jpeg({ quality: 80 }).toBuffer();
-      }
-
-      let quality = 70;
-      while (outputBuffer.length > 100000 && quality >= 40) {
-        if (format === "png") {
-          outputBuffer = await image.png({ quality, effort: 6 }).toBuffer();
-        } else if (format === "webp") {
-          outputBuffer = await image.webp({ quality }).toBuffer();
-        } else {
-          outputBuffer = await image.jpeg({ quality }).toBuffer();
-        }
-        quality -= 10;
       }
     }
 

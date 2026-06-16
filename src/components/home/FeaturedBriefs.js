@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 
-export default function FeaturedBriefs({ articles }) {
+export default function FeaturedBriefs({ articles, categoryName = 'Politik', categorySlug = 'politik' }) {
     const list = (articles || []).slice(0, 10);
     if (list.length === 0) return null;
 
@@ -55,8 +55,8 @@ export default function FeaturedBriefs({ articles }) {
             <div className="flex justify-between items-center mb-4 border-b border-white/20 pb-3">
                 <div className="flex items-center gap-2">
                     <span className="w-1 h-5 bg-white block rounded-full" />
-                    <Link href="/category/politik" className="text-base font-bold uppercase font-display tracking-wide hover:text-white/80 transition-colors">
-                        Berita Politik
+                    <Link href={`/category/${categorySlug}`} className="text-base font-bold uppercase font-display tracking-wide hover:text-white/80 transition-colors">
+                        Berita {categoryName}
                     </Link>
                 </div>
             </div>

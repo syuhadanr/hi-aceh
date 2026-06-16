@@ -36,6 +36,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
     if (pathname === "/admin/ads") return "Manajemen Iklan";
     if (pathname === "/admin/users") return "Daftar Pengguna";
     if (pathname === "/admin/settings") return "Pengaturan Sistem";
+    if (pathname === "/admin/settings" || pathname === "/admin/settings/") return "Pengaturan Sistem";
     if (pathname === "/admin/activity") return "Log Aktivitas";
     if (pathname === "/admin/profile") return "Profil Saya";
     if (pathname.startsWith("/admin/articles")) {

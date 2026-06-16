@@ -112,10 +112,10 @@ export default function Header() {
                 }`}>
                     {/* Logo (desktop) */}
                     <div className="flex flex-col items-start">
-                        <img 
-                            src={settings?.headerLogo || settings?.siteLogo || "/logo.png"} 
-                            alt={settings?.siteName || "Hi Aceh"} 
-                            className={`${hasHeaderAd ? 'h-24 lg:h-28' : 'h-14'} w-auto transition-all duration-300`} 
+                        <img
+                            src={settings?.headerLogo || settings?.siteLogo || "/logo.png"}
+                            alt={settings?.siteName || "Hi Aceh"}
+                            className={`${hasHeaderAd ? 'h-20 lg:h-24' : 'h-14'} w-auto object-contain transition-all duration-300 max-h-24`} 
                         />
                         {settings?.headerShowSlogan && settings?.siteDescription && !hasHeaderAd && (
                             <span className="text-white/80 text-[10px] font-medium tracking-widest italic mt-1 font-sans">
@@ -166,7 +166,7 @@ export default function Header() {
                         <img
                             src={settings?.headerLogo || settings?.siteLogo || "/logo.png"}
                             alt={settings?.siteName || "Hi Aceh"}
-                            className="h-10 w-auto"
+                            className="h-10 w-auto object-contain max-h-12"
                         />
                     </div>
 
