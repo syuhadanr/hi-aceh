@@ -142,18 +142,18 @@ export default async function Home() {
     featuredBriefsArticles[0]?.category ||
     featuredBriefsCategory.charAt(0).toUpperCase() + featuredBriefsCategory.slice(1);
 
-  const visibleNavbarSlugs = (settings.navbarCategories || [])
-    .filter((cat) => cat.visible)
-    .map((cat) => cat.slug);
+const visibleNavbarSlugs = (settings.navbarCategories || [])
+  .filter((cat: { name: string; slug: string; visible: boolean }) => cat.visible)
+  .map((cat: { name: string; slug: string; visible: boolean }) => cat.slug);
 
   const categorySourceSlugs = visibleNavbarSlugs.length > 0
     ? visibleNavbarSlugs
     : Array.from(new Set(articles.map((a) => a.categorySlug)));
 
-  const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug) => {
+const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug: string) => {
     const categoryArticles = articles.filter((a) => a.categorySlug === slug);
-    const categoryNameFromSettings = (settings.navbarCategories || []).find((cat) => cat.slug === slug)?.name;
-    return {
+   const categoryNameFromSettings = (settings.navbarCategories || []).find((cat: { name: string; slug: string; visible: boolean }) => cat.slug === slug)?.name;
+   return {
       slug,
       title:
         categoryArticles[0]?.category ||
