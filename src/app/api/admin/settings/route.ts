@@ -20,22 +20,7 @@ const DEFAULT_SETTINGS = {
   socialYoutube: "https://youtube.com/hiaceh",
   headerLogo: "",
   headerShowSlogan: true,
-  navbarCategories: [
-    { name: "ACEH", slug: "aceh", visible: true },
-    { name: "INDONESIA", slug: "indonesia", visible: true },
-    { name: "POLITIK", slug: "politik", visible: true },
-    { name: "EKONOMI", slug: "ekonomi", visible: true },
-    { name: "BUDAYA", slug: "budaya", visible: true },
-    { name: "WISATA", slug: "wisata", visible: true },
-    { name: "KESEHATAN", slug: "kesehatan", visible: true },
-    { name: "GAYA HIDUP", slug: "gaya-hidup", visible: true },
-    { name: "GLOBAL", slug: "global", visible: true },
-    { name: "TEKNOLOGI", slug: "teknologi", visible: true },
-    { name: "OLAHRAGA", slug: "olahraga", visible: true },
-    { name: "HIBURAN", slug: "hiburan", visible: true },
-    { name: "DAERAH", slug: "daerah", visible: true },
-    { name: "NASIONAL", slug: "nasional", visible: true }
-  ],
+  navbarCategories: [],
   footerLogo: "",
   footerDescription: "Portal Berita Aceh & Indonesia Terkini",
   footerShowCategories: [

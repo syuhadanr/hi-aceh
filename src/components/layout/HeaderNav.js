@@ -218,11 +218,11 @@ export default function HeaderNav({ activeCategory }) {
                                 alt={settings?.siteName || "Hi Aceh"}
                                 className="h-18 w-auto transition-all duration-300"
                             />
-                            {settings?.siteDescription && (
-                                <span className="text-white/80 text-[10px] font-medium tracking-widest italic mt-1 font-sans">
-                                    {settings.siteDescription}
-                                </span>
-                            )}
+                          {settings?.headerShowSlogan && settings?.siteDescription && (
+    <span className="text-white/80 text-[10px] font-medium tracking-widest italic mt-1 font-sans">
+        {settings.siteDescription}
+    </span>
+)}
                         </div>
 
                         {/* Controls — absolute right so logo stays centred */}

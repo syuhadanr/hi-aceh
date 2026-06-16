@@ -11,21 +11,26 @@
   "socialTwitter": "https://twitter.com/hiaceh",
   "socialYoutube": "https://youtube.com/hiaceh",
   "headerLogo": "",
-  "headerShowSlogan": false,
+  "headerShowSlogan": true,
   "navbarCategories": [
     {
       "name": "ACEH",
       "slug": "aceh",
-      "visible": true
+      "visible": false
     },
     {
       "name": "INDONESIA",
       "slug": "indonesia",
-      "visible": true
+      "visible": false
     },
     {
       "name": "POLITIK",
       "slug": "politik",
+      "visible": true
+    },
+    {
+      "name": "JEPANG",
+      "slug": "jepang",
       "visible": true
     },
     {
@@ -59,21 +64,6 @@
       "visible": true
     },
     {
-      "name": "TEKNOLOGI",
-      "slug": "teknologi",
-      "visible": true
-    },
-    {
-      "name": "OLAHRAGA",
-      "slug": "olahraga",
-      "visible": true
-    },
-    {
-      "name": "HIBURAN",
-      "slug": "hiburan",
-      "visible": true
-    },
-    {
       "name": "DAERAH",
       "slug": "daerah",
       "visible": true
@@ -82,46 +72,67 @@
       "name": "NASIONAL",
       "slug": "nasional",
       "visible": true
+    },
+    {
+      "name": "TEST",
+      "slug": "test",
+      "visible": true
     }
   ],
   "footerLogo": "",
   "footerDescription": "Portal Berita Aceh & Indonesia Terkini",
   "footerShowCategories": [
     {
+      "name": "Wisata",
+      "slug": "wisata"
+    },
+    {
       "name": "Aceh",
       "slug": "aceh"
+    },
+    {
+      "name": "Budaya",
+      "slug": "budaya"
+    },
+    {
+      "name": "Daerah",
+      "slug": "daerah"
     },
     {
       "name": "Ekonomi",
       "slug": "ekonomi"
     },
     {
+      "name": "Gaya Hidup",
+      "slug": "gaya-hidup"
+    },
+    {
       "name": "Global",
       "slug": "global"
     },
     {
-      "name": "Politik",
-      "slug": "politik"
+      "name": "JEPANG",
+      "slug": "jepang"
     },
     {
       "name": "Indonesia",
       "slug": "indonesia"
     },
     {
-      "name": "Nasional",
-      "slug": "nasional"
-    },
-    {
-      "name": "Wisata",
-      "slug": "wisata"
-    },
-    {
       "name": "Kesehatan",
       "slug": "kesehatan"
     },
     {
-      "name": "Budaya",
-      "slug": "budaya"
+      "name": "Nasional",
+      "slug": "nasional"
+    },
+    {
+      "name": "Politik",
+      "slug": "politik"
+    },
+    {
+      "name": "Test",
+      "slug": "test"
     }
   ],
   "footerShowPages": [

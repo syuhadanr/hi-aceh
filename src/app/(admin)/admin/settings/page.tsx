@@ -117,38 +117,61 @@ export default function SettingsPage() {
   const footerLogoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetchSettings();
-    fetchCategories();
-  }, []);
+useEffect(() => {
+  fetchSettingsAndReconcile();
+}, []);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("/api/admin/categories");
-      if (res.ok) {
-        const data = await res.json();
-        setAllCategories(data.map((cat: any) => ({ name: cat.name, slug: cat.slug })));
-      }
-    } catch (e) {
-      console.error("Failed to load categories for footer settings", e);
-    }
-  };
+const fetchSettingsAndReconcile = async () => {
+  setIsLoading(true);
+  try {
+    const [settingsRes, categoriesRes] = await Promise.all([
+      fetch("/api/admin/settings"),
+      fetch("/api/admin/categories"),
+    ]);
 
-  const fetchSettings = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/admin/settings");
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-      }
-    } catch (e) {
-      console.error(e);
-      showToast("Gagal memuat pengaturan sistem.", "error");
-    } finally {
-      setIsLoading(false);
+    let fetchedSettings: any = {};
+    if (settingsRes.ok) {
+      fetchedSettings = await settingsRes.json();
     }
-  };
+
+    let realCategories: { name: string; slug: string }[] = [];
+    if (categoriesRes.ok) {
+      const catData = await categoriesRes.json();
+      realCategories = catData.map((cat: any) => ({ name: cat.name, slug: cat.slug }));
+      setAllCategories(realCategories);
+    }
+
+    const savedNavbar: { name: string; slug: string; visible: boolean }[] =
+      fetchedSettings.navbarCategories || [];
+
+    // Keep saved order/visibility for categories that still exist
+    const reconciled = savedNavbar.filter((item) =>
+      realCategories.some((cat) => cat.slug === item.slug)
+    );
+
+    // Update names in case they changed, keep visibility/order
+    const reconciledWithFreshNames = reconciled.map((item) => {
+      const match = realCategories.find((cat) => cat.slug === item.slug);
+      return { ...item, name: match ? match.name.toUpperCase() : item.name };
+    });
+
+    // Append new categories not yet in the saved list
+    const existingSlugs = new Set(reconciledWithFreshNames.map((i) => i.slug));
+    const newOnes = realCategories
+      .filter((cat) => !existingSlugs.has(cat.slug))
+      .map((cat) => ({ name: cat.name.toUpperCase(), slug: cat.slug, visible: true }));
+
+    const finalNavbar = [...reconciledWithFreshNames, ...newOnes];
+
+    setSettings({ ...fetchedSettings, navbarCategories: finalNavbar });
+  } catch (e) {
+    console.error(e);
+    showToast("Gagal memuat pengaturan sistem.", "error");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const fetchMediaLibrary = async () => {
     setIsLoadingMedia(true);
@@ -804,7 +827,7 @@ export default function SettingsPage() {
                       }
                       disabled={!isAuthorized}
                       className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${
-                        settings.headerShowSlogan ? "bg-teal-500" : "bg-zinc-350 dark:bg-zinc-700"
+                        settings.headerShowSlogan ? "bg-teal-500" : "bg-zinc-300 dark:bg-zinc-700"
                       }`}
                     >
                       <div
