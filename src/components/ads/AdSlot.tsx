@@ -60,7 +60,7 @@ export default function AdSlot({ position, className = "" }: { position: string;
     imgClass = "w-full h-full object-cover";
   } else if (position === "FEED_INLINE_1") {
     // Leaderboard banner 8:1
-    containerClass = "w-full aspect-[8/1] overflow-hidden rounded-xl";
+    containerClass = "w-full aspect-[4/5] overflow-hidden rounded-xl";
     imgClass = "w-full h-full object-cover";
 } else if (position === "FEED_INLINE_2") {
     // Kategori Berita card header image ratio

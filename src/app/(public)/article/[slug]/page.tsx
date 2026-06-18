@@ -14,6 +14,7 @@ import Link from "next/link";
 import AdSlot from "@/components/ads/AdSlot";
 import ViewTracker from "@/components/article/ViewTracker";
 import ViewCounter from "@/components/article/ViewCounter";
+import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -21,6 +22,46 @@ interface PageProps {
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const article: any = await getArticleBySlug(slug);
+
+  if (!article) {
+    return { title: "Artikel tidak ditemukan" };
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://hiaceh.id";
+  const articleUrl = `${baseUrl}/article/${slug}`;
+  const imageUrl = article.image?.startsWith("http")
+    ? article.image
+    : `${baseUrl}${article.image}`;
+
+  return {
+    title: article.title,
+    description: article.excerpt,
+    openGraph: {
+      title: article.title,
+      description: article.excerpt,
+      url: articleUrl,
+      siteName: "Hi Aceh",
+      type: "article",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.excerpt,
+      images: [imageUrl],
+    },
+  };
+}
 
 function getYouTubeEmbedUrl(url: string): string {
   const match = url.match(/(?:youtu\.be\/|watch\?v=|embed\/)([^&?/]+)/);

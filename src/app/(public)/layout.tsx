@@ -1,5 +1,6 @@
 import React from "react";
 import { Inter, Playfair_Display, Oswald } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,9 +23,34 @@ const oswald = Oswald({
   display: "swap",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://hiaceh.id"),
   title: "Hi Aceh - Portal Berita Aceh & Indonesia",
   description: "Cermat Mendata, Cerdas Mengulas",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
+  openGraph: {
+    title: "Hi Aceh - Portal Berita Aceh & Indonesia",
+    description: "Cermat Mendata, Cerdas Mengulas",
+    siteName: "Hi Aceh",
+    images: [
+      {
+        url: "/logo.png", // swap for a proper 1200x630 OG banner if you have one
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hi Aceh - Portal Berita Aceh & Indonesia",
+    description: "Cermat Mendata, Cerdas Mengulas",
+    images: ["/logo.png"],
+  },
 };
 
 export default function PublicLayout({
