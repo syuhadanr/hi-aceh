@@ -41,7 +41,6 @@ type PrismaArticle = {
 
 export function mapPrismaArticle(article: any) {
   if (!article) return null;
-  console.log("article.type:", article.type, "article.videoUrl:", article.videoUrl);
 
   const dateOptions: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -52,7 +51,7 @@ export function mapPrismaArticle(article: any) {
     ? new Date(article.publishedAt).toLocaleDateString("en-US", dateOptions)
     : "";
 
-  let imageUrl = "https://picsum.photos/seed/" + encodeURIComponent(article.title || "news") + "/800/600";
+ let imageUrl = "/fallback.jpeg";
   if (article.featuredImage?.url) {
     imageUrl = article.featuredImage.url;
   } else if (article.type === "VIDEO" && article.videoUrl) {

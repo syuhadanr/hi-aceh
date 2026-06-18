@@ -83,7 +83,7 @@ export default function Navigation({ activeCategory }) {
 
     return (
         <nav className={`bg-aceh-green text-white sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}>
-            <div className="container mx-auto px-4">
+            <div className="w-full max-w-[1200px] mx-auto px-4">
                 <div className="flex justify-between md:justify-center items-center">
                     <button
                         className="md:hidden p-2 text-white hover:bg-green-800 rounded transition-colors"
@@ -177,7 +177,7 @@ export default function Navigation({ activeCategory }) {
                 className={`absolute left-0 right-0 top-full z-[60] bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-xl transition-all duration-300 ease-in-out overflow-hidden ${searchOpen ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
                     }`}
             >
-                <div className="container mx-auto px-4 py-4">
+                <div className="w-full max-w-[1200px] mx-auto px-4 py-4">
                     <form onSubmit={handleSearch} className="flex items-center gap-3 max-w-2xl mx-auto">
                         <div className="flex-1 relative">
                             <i className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</i>

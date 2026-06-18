@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow access to the standalone login page
-  if (pathname === "/login") {
+  if (pathname === "/tungkuaceh") {
     return NextResponse.next();
   }
 
@@ -15,15 +15,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow /admin/login redirect (it just redirects to /login)
-  if (pathname === "/admin/login") {
-    return NextResponse.next();
-  }
-
   // For all other /admin/* routes, check session
   const session = await auth();
   if (!session) {
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/tungkuaceh", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -32,5 +27,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login"],
+  matcher: ["/admin/:path*", "/tungkuaceh"],
 };

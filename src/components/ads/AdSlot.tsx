@@ -59,10 +59,10 @@ export default function AdSlot({ position, className = "" }: { position: string;
     }
     imgClass = "w-full h-full object-cover";
   } else if (position === "FEED_INLINE_1") {
-    // Portrait card ratio matching "Berita Terkini" card — 4:3 landscape
-    containerClass = "w-full aspect-[4/3] overflow-hidden rounded-xl";
+    // Leaderboard banner 8:1
+    containerClass = "w-full aspect-[8/1] overflow-hidden rounded-xl";
     imgClass = "w-full h-full object-cover";
-  } else if (position === "FEED_INLINE_2") {
+} else if (position === "FEED_INLINE_2") {
     // Kategori Berita card header image ratio
     containerClass = "w-full aspect-[4/3] overflow-hidden";
     imgClass = "w-full h-full object-cover";

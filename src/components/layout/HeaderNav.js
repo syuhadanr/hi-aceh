@@ -181,7 +181,7 @@ export default function HeaderNav({ activeCategory }) {
                 {/* ── DESKTOP HEADER ── */}
                 {hasHeaderAd ? (
                     /* With ad: 3-column grid so ad sits centred between logo and controls */
-                    <div className="container mx-auto px-4 hidden md:grid md:grid-cols-[200px_1fr_200px] lg:grid-cols-[250px_1fr_250px] items-center gap-4">
+                    <div className="w-full max-w-[1200px] mx-auto px-4 hidden md:grid md:grid-cols-[200px_1fr_200px] lg:grid-cols-[250px_1fr_250px] items-center gap-4">
                         {/* Logo */}
                         <div className="flex flex-col items-start">
                             <img
@@ -210,7 +210,7 @@ export default function HeaderNav({ activeCategory }) {
                     </div>
                 ) : (
                     /* Without ad: logo perfectly centred, controls pinned to the right */
-                    <div className="container mx-auto px-4 hidden md:flex items-center justify-center relative">
+                    <div className="w-full max-w-[1200px] mx-auto px-4 hidden md:flex items-center justify-center relative">
                         {/* Logo — centred */}
                         <div className="flex flex-col items-center">
                             <img
@@ -238,7 +238,7 @@ export default function HeaderNav({ activeCategory }) {
                 )}
 
                 {/* ── MOBILE HEADER — always compact, no ad ── */}
-                <div className="container mx-auto px-4 flex items-center justify-between md:hidden">
+                <div className="w-full max-w-[1200px] mx-auto px-4 flex items-center justify-between md:hidden">
                     {/* Mobile Date */}
                     <div className="flex flex-col justify-center leading-tight shrink-0">
                         <span className="text-white text-[10px] font-bold opacity-80">
@@ -272,7 +272,7 @@ export default function HeaderNav({ activeCategory }) {
 
             {/* ── NAVIGATION ── */}
             <nav className={`bg-aceh-green text-white sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-lg' : 'shadow-md'}`}>
-                <div className="container mx-auto px-4">
+                <div className="w-full max-w-[1200px] mx-auto px-4">
                     <div className="flex justify-between md:justify-center items-center">
 
                         {/* Mobile Nav */}
@@ -353,7 +353,7 @@ export default function HeaderNav({ activeCategory }) {
                 {/* Search bar */}
                 <div className={`absolute left-0 right-0 top-full z-[60] bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-xl transition-all duration-300 ease-in-out overflow-hidden ${searchOpen ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
                     }`}>
-                    <div className="container mx-auto px-4 py-4">
+                    <div className="w-full max-w-[1200px] mx-auto px-4 py-4">
                         <form onSubmit={handleSearch} className="flex items-center gap-3 max-w-2xl mx-auto">
                             <div className="flex-1 relative">
                                 <i className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</i>

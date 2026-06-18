@@ -149,7 +149,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
               <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5" />
 
               <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => signOut({ callbackUrl: "/tungkuaceh" })}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-zinc-650 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />

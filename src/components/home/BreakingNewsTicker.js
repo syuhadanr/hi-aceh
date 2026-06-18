@@ -8,7 +8,7 @@ export default function BreakingNewsTicker({ items }) {
 
     return (
         <div className="bg-white border-b border-gray-200 dark:bg-zinc-900 dark:border-zinc-800">
-            <div className="container mx-auto flex items-center">
+            <div className="w-full max-w-[1200px] mx-auto px-4 flex items-center">
                 <div className="hidden md:flex bg-brand-green text-white text-xs font-bold px-4 py-3 uppercase shrink-0 items-center gap-2">
                     <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                     Breaking News

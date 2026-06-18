@@ -146,18 +146,19 @@ export default async function ArticlePage({ params }: PageProps) {
             ) : article.type === "FOTO" && article.carousel?.length > 0 ? (
               <PhotoCarousel photos={article.carousel} />
             ) : (
-              <figure className="relative w-full h-[400px] md:h-[500px] mb-8 bg-gray-100 dark:bg-zinc-800">
-                <Image
-                  src={article.image}
-                  alt={article.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <figcaption className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4 text-white text-xs font-sans">
-                  © 2024 Hi Aceh Media. Foto ilustrasi.
-                </figcaption>
-              </figure>
+<figure className="relative w-full mb-8">
+  <Image
+    src={article.image}
+    alt={article.title}
+    width={1200}
+    height={800}
+    className="w-full h-auto object-contain bg-gray-100 dark:bg-zinc-800"
+    priority
+  />
+  <figcaption className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4 text-white text-xs font-sans">
+    © 2024 Hi Aceh Media. Foto ilustrasi.
+  </figcaption>
+</figure>
             )}
 
             <AdSlot position="ARTICLE_BELOW_IMAGE" className="mb-8" />

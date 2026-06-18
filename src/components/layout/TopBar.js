@@ -32,7 +32,7 @@ export default function TopBar() {
 
     return (
         <div className="bg-black text-white text-xs py-2 px-4 shadow-sm font-sans hidden md:block">
-            <div className="container mx-auto flex justify-between items-center">
+            <div className="w-full max-w-[1200px] mx-auto px-4 flex justify-between items-center">
                 <div className="flex items-center space-x-6">
                     <span className="font-bold">
                         {/* Desktop: single line */}
@@ -53,7 +53,6 @@ export default function TopBar() {
                     </div>
                 </div>
                 <div className="flex items-center space-x-6">
-                    <a href="/admin/login" className="text-gray-300 hover:text-white transition-colors">Login</a>
                     <div className="flex space-x-3 text-gray-400">
                         <a href={settings?.socialTwitter || '#'} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors" aria-label="Twitter / X">
                             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">

@@ -10,22 +10,36 @@ interface Photo {
 
 export default function PhotoCarousel({ photos }: { photos: Photo[] }) {
     const [current, setCurrent] = useState(0);
+    const [aspectRatios, setAspectRatios] = useState<Record<number, number>>({});
 
     if (!photos || photos.length === 0) return null;
 
     const prev = () => setCurrent((p) => (p === 0 ? photos.length - 1 : p - 1));
     const next = () => setCurrent((p) => (p === photos.length - 1 ? 0 : p + 1));
 
+    const handleImageLoad = (idx: number, e: React.SyntheticEvent<HTMLImageElement>) => {
+        const img = e.currentTarget;
+        const ratio = img.naturalWidth / img.naturalHeight;
+        setAspectRatios((prev) => ({ ...prev, [idx]: ratio }));
+    };
+
+    const currentRatio = aspectRatios[current] || 16 / 9;
+
     return (
         <div className="mb-8">
-            {/* Main image */}
-            <div className="relative w-full h-[400px] md:h-[500px] bg-gray-100 dark:bg-zinc-800 overflow-hidden">
+            {/* Main image — sizes dynamically to the current photo's aspect ratio */}
+          <div
+    className="relative w-full max-h-[80vh] bg-gray-100 dark:bg-zinc-800 overflow-hidden transition-all duration-300 mx-auto"
+    style={{ aspectRatio: currentRatio }}
+>
                 <Image
                     src={photos[current].url}
                     alt={photos[current].caption || `Foto ${current + 1}`}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     priority
+                    onLoad={(e) => handleImageLoad(current, e)}
+                    sizes="(max-width: 768px) 100vw, 800px"
                 />
                 {/* Nav arrows */}
                 {photos.length > 1 && (

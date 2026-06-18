@@ -158,7 +158,7 @@ export default function Footer() {
 
             {/* ── DESKTOP LAYOUT (hidden on mobile) ── */}
             <div className="hidden md:block">
-                <div className="container mx-auto px-4 pt-14">
+                <div className="w-full max-w-[1200px] mx-auto px-4 pt-14">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12">
 
                         {/* Column 1: Brand & Info */}

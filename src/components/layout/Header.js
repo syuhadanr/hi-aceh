@@ -105,7 +105,7 @@ export default function Header() {
         <>
             <header className="bg-[#187957] py-3 border-b border-white/10 transition-colors duration-200 font-sans relative z-[60]">
                 {/* Desktop: 3-col grid only when there is a header ad; otherwise simple flex */}
-                <div className={`container mx-auto px-4 ${
+                <div className={`w-full max-w-[1200px] mx-auto px-4 ${
                     hasHeaderAd
                         ? 'hidden md:grid md:grid-cols-[200px_1fr_200px] lg:grid-cols-[250px_1fr_250px] items-center gap-4'
                         : 'hidden md:flex items-center justify-between'
@@ -157,7 +157,7 @@ export default function Header() {
                 </div>
 
                 {/* Mobile: always show compact header — no ad, normal-sized logo */}
-                <div className="container mx-auto px-4 flex items-center justify-between md:hidden">
+                <div className="w-full max-w-[1200px] mx-auto px-4 flex items-center justify-between md:hidden">
                     {/* Empty left block to keep layout matching HeaderNav or spacing */}
                     <div className="w-10"></div>
 

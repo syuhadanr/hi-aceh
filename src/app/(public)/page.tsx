@@ -3,9 +3,7 @@ import TopBar from "@/components/layout/TopBar";
 import Header from "@/components/layout/Header";
 import Navigation from "@/components/layout/Navigation";
 import BreakingNews from "@/components/home/BreakingNews";
-import EditorsPicks from "@/components/home/EditorsPicks";
 import MainNews from "@/components/home/MainNews";
-import TrendingNow from "@/components/home/TrendingNow";
 import FeaturedPosts from "@/components/home/FeaturedPosts";
 import FeaturedBriefs from "@/components/home/FeaturedBriefs";
 import ExpressPosts from "@/components/home/ExpressPosts";
@@ -66,7 +64,7 @@ export default async function Home() {
               Saat ini belum ada artikel berita yang dipublikasikan. Silakan kembali lagi nanti atau login ke dashboard admin untuk menulis berita baru.
             </p>
             <a
-              href="/admin/login"
+              href="/tungkuaceh"
               className="inline-block bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase px-6 py-3 rounded transition-colors"
             >
               Tulis Berita
@@ -84,7 +82,6 @@ export default async function Home() {
   const regularArticles = articles.filter((a) => !a.isFeatured);
   const heroArticles = [...featuredArticles, ...regularArticles].slice(0, 5);
 
-  const editorsPicks = articles.slice(1, 5);
   const trending = await getTrendingArticles();
   const featured = articles.slice(0, 20);
 
@@ -173,43 +170,30 @@ const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug: string) => {
 
       <BreakingNews />
 
-      <div className="w-full max-w-screen-2xl mx-auto px-4 py-8 flex-grow">
+      <div className="w-full max-w-[1200px] mx-auto px-4 py-8 flex-grow">
 
-        {/* Top Section: Editors Picks, Main News, Trending */}
+        {/* Top Section: Main News + Popular widget */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 mb-12">
-          {/* Desktop only: Editors Picks left column */}
-          <div className="hidden lg:block lg:col-span-3">
-            <EditorsPicks articles={editorsPicks} />
-          </div>
-
-          {/* Main carousel — always first on mobile */}
-          <div className="lg:col-span-6 order-1 lg:order-none">
+          <div className="lg:col-span-8 order-1 lg:order-none">
             <MainNews articles={heroArticles} />
           </div>
 
-          {/* Mobile only: Berita Terbaru (FeaturedPosts) appears after carousel */}
           <div className="block lg:hidden order-2">
             <FeaturedPosts articles={featured.slice(0, 20)} />
           </div>
 
-          {/* Trending — after Berita Terbaru on mobile, right column on desktop */}
-          <div className="lg:col-span-3 order-3 lg:order-none">
-            <TrendingNow articles={trending} />
-          </div>
-        </div>
-
-        {/* Featured Posts + Popular widget — desktop only */}
-        <div className="mb-12 flex flex-col-reverse lg:grid lg:grid-cols-12 gap-6 items-stretch">
-          <div className="hidden lg:block lg:col-span-8">
-            <FeaturedPosts articles={featured.slice(0, 6)} />
-          </div>
-          <div className="hidden lg:block lg:col-span-4">
+          <div className="lg:col-span-4 order-3 lg:order-none">
             <PopularWidget articles={popularList} />
           </div>
         </div>
 
+        {/* Featured Posts */}
+       <div className="mb-12 hidden lg:block">
+    <FeaturedPosts articles={featured.slice(0, 20)} />
+</div>
+
         {/* Featured Briefs Section */}
-        <div className="mb-12">
+        <div className="hidden mb-12">
           <FeaturedBriefs
             articles={featuredBriefsArticles}
             categoryName={featuredBriefsTitle}

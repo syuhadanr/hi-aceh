@@ -319,7 +319,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </div>
           </div>
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: "/tungkuaceh" })}
             title="Keluar dari Panel"
             className="p-1.5 rounded-md hover:bg-zinc-800 hover:text-red-400 text-zinc-500 transition-colors cursor-pointer"
           >

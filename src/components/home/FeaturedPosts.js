@@ -6,8 +6,8 @@ import AdSlot from '@/components/ads/AdSlot';
 import { useState, useEffect } from 'react';
 
 export default function FeaturedPosts({ articles }) {
-    const list = (articles || []).slice(0, 6);        // desktop: always max 6
-    const mobileList = (articles || []).slice(0, 20); // mobile: up to 20
+    const list = (articles || []).slice(0, 20);
+    const mobileList = (articles || []).slice(0, 20);
     const [feedAd, setFeedAd] = useState(null);
 
     useEffect(() => {
@@ -17,7 +17,7 @@ export default function FeaturedPosts({ articles }) {
             .catch(() => {});
     }, []);
 
-    if (!mobileList || mobileList.length === 0) return null;
+    if (!list || list.length === 0) return null;
 
     return (
         <section>
@@ -26,12 +26,9 @@ export default function FeaturedPosts({ articles }) {
                     Berita Terbaru
                     <span className="absolute bottom-[-12px] left-0 w-16 h-0.5 bg-primary" />
                 </h2>
-                <Link href="/latest" className="text-xs font-bold uppercase tracking-wider text-zinc-500 hover:text-primary transition-colors">
-                    Selengkapnya
-                </Link>
             </div>
 
-            {/* Mobile: list with ad injected after 3rd item */}
+            {/* Mobile: compact list */}
             <div className="flex flex-col gap-6 sm:hidden">
                 {mobileList.slice(0, 3).map((post, idx) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
@@ -42,20 +39,15 @@ export default function FeaturedPosts({ articles }) {
                             </div>
                         </div>
                         <div className="flex flex-col justify-between py-0.5">
-                            <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">
-                                {post.category}
-                            </span>
-                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">
-                                {post.title}
-                            </h4>
+                            <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{post.category}</span>
+                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">{post.title}</h4>
                             <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
                         </div>
                     </a>
                 ))}
 
-                {/* Ad slot injected in between */}
                 {feedAd && (
-                    <div className="border-t border-zinc-100 dark:border-zinc-850 pt-4">
+                    <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
                         <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
                         <AdSlot position="FEED_INLINE_1" />
                     </div>
@@ -70,95 +62,64 @@ export default function FeaturedPosts({ articles }) {
                             </div>
                         </div>
                         <div className="flex flex-col justify-between py-0.5">
-                            <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">
-                                {post.category}
-                            </span>
-                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">
-                                {post.title}
-                            </h4>
+                            <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{post.category}</span>
+                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">{post.title}</h4>
                             <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
                         </div>
                     </a>
                 ))}
+
+                <div className="flex justify-center pt-2">
+                    <Link href="/latest" className="px-6 py-2.5 border border-zinc-300 dark:border-zinc-700 rounded-full text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:border-primary hover:text-primary transition-colors">
+                        Selengkapnya
+                    </Link>
+                </div>
             </div>
 
-            {/* Tablet/Desktop: card grid — ad replaces 6th slot */}
-            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {list.slice(0, feedAd ? 2 : 3).map((item) => (
-                    <article key={item.id} className="group flex flex-col gap-3.5 bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300">
-                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-900">
-                            <Image
-                                src={item.image}
-                                alt={item.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <span className="absolute top-3 left-3 bg-zinc-950/80 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-sm">
-                                {item.category}
-                            </span>
-                        </div>
-                        <div className="flex flex-col flex-1 gap-3">
-                            <Link href={`/article/${item.slug}`}>
-                                <h3 className="font-bold text-sm sm:text-base leading-snug group-hover:text-primary text-zinc-900 dark:text-white line-clamp-2 transition-colors">
-                                    {item.title}
-                                </h3>
-                            </Link>
-                            {item.excerpt ? (
-                                <p className="text-zinc-500 dark:text-zinc-400 text-xs line-clamp-2">
-                                    {item.excerpt}
-                                </p>
-                            ) : null}
-                            <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 mt-auto pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-                                <span className="font-semibold text-zinc-700 dark:text-zinc-300">{item.author}</span>
-                                <span className="text-zinc-400">•</span>
-                                <span>{item.publishedAt}</span>
+            {/* Desktop: search-style cards */}
+            <div className="hidden sm:flex flex-col gap-4">
+                {[...list.slice(0, 3), ...(feedAd ? ['__ad__'] : []), ...list.slice(3)].map((post) => {
+                    if (post === '__ad__') {
+                        return (
+                            <div key="ad-slot" className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
+                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
+                                <AdSlot position="FEED_INLINE_1" />
+                            </div>
+                        );
+                    }
+                    return (
+                        <div key={post.id} className="flex gap-5 bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group">
+                            <div className="relative w-44 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900 aspect-[4/3]">
+                                <Image src={post.image} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <span className="absolute top-3 left-3 bg-zinc-950/80 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-sm">
+                                    {post.category}
+                                </span>
+                            </div>
+                            <div className="flex flex-col flex-1 justify-between py-1 gap-2">
+                                <div className="flex flex-col gap-1.5">
+                                    <span className="text-[11px] font-semibold text-primary uppercase tracking-wider">{post.author}</span>
+                                    <Link href={`/article/${post.slug}`}>
+                                        <h3 className="font-bold text-lg leading-snug group-hover:text-primary text-zinc-900 dark:text-white line-clamp-2 transition-colors">
+                                            {post.title}
+                                        </h3>
+                                    </Link>
+                                    {post.excerpt && (
+                                        <p className="text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1">{post.excerpt}</p>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                                    <span>{post.publishedAt}</span>
+                                </div>
                             </div>
                         </div>
-                    </article>
-                ))}
+                    );
+                })}
 
-                {/* Ad Card replaces a slot when ad exists */}
-                {feedAd && (
-                    <article className="group flex flex-col gap-3.5 bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 px-4 pt-4">Sponsor</span>
-                        <div className="flex-1 w-full overflow-hidden">
-                            <AdSlot position="FEED_INLINE_1" />
-                        </div>
-                    </article>
-                )}
-
-                {list.slice(feedAd ? 2 : 3, feedAd ? 5 : 6).map((item) => (
-                    <article key={item.id} className="group flex flex-col gap-3.5 bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300">
-                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-900">
-                            <Image
-                                src={item.image}
-                                alt={item.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <span className="absolute top-3 left-3 bg-zinc-950/80 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-sm">
-                                {item.category}
-                            </span>
-                        </div>
-                        <div className="flex flex-col flex-1 gap-3">
-                            <Link href={`/article/${item.slug}`}>
-                                <h3 className="font-bold text-sm sm:text-base leading-snug group-hover:text-primary text-zinc-900 dark:text-white line-clamp-2 transition-colors">
-                                    {item.title}
-                                </h3>
-                            </Link>
-                            {item.excerpt ? (
-                                <p className="text-zinc-500 dark:text-zinc-400 text-xs line-clamp-2">
-                                    {item.excerpt}
-                                </p>
-                            ) : null}
-                            <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 mt-auto pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-                                <span className="font-semibold text-zinc-700 dark:text-zinc-300">{item.author}</span>
-                                <span className="text-zinc-400">•</span>
-                                <span>{item.publishedAt}</span>
-                            </div>
-                        </div>
-                    </article>
-                ))}
+                <div className="flex justify-center pt-2">
+                    <Link href="/latest" className="px-8 py-3 border border-zinc-300 dark:border-zinc-700 rounded-full text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:border-primary hover:text-primary transition-colors">
+                        Selengkapnya
+                    </Link>
+                </div>
             </div>
         </section>
     );

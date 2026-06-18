@@ -8,24 +8,43 @@ import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from "@/components/layout/Footer";
 
 interface PageProps {
-    searchParams: Promise<{ page?: string }>;
+    searchParams: Promise<{ page?: string; perPage?: string }>;
 }
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-const PER_PAGE = 15;
+const PER_PAGE_OPTIONS = [30, 50, 100];
+const DEFAULT_PER_PAGE = 30;
 
 export default async function LatestPage({ searchParams }: PageProps) {
-    const { page: pageParam } = await searchParams;
+    const { page: pageParam, perPage: perPageParam } = await searchParams;
     const currentPage = Math.max(1, parseInt(pageParam || "1", 10));
+    const perPage = PER_PAGE_OPTIONS.includes(parseInt(perPageParam || "", 10))
+        ? parseInt(perPageParam!, 10)
+        : DEFAULT_PER_PAGE;
 
     const allArticles: any[] = await getAllArticles();
     const trending: any[] = ((await getTrendingArticles()) || []).slice(0, 6);
 
     const totalArticles = allArticles.length;
-    const totalPages = Math.ceil(totalArticles / PER_PAGE);
-    const articles = allArticles.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    const totalPages = Math.ceil(totalArticles / perPage);
+    const articles = allArticles.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+    const buildPageUrl = (p: number) => {
+        const params = new URLSearchParams();
+        if (p > 1) params.set('page', String(p));
+        if (perPage !== DEFAULT_PER_PAGE) params.set('perPage', String(perPage));
+        const qs = params.toString();
+        return `/latest${qs ? `?${qs}` : ''}`;
+    };
+
+    const buildPerPageUrl = (pp: number) => {
+        const params = new URLSearchParams();
+        if (pp !== DEFAULT_PER_PAGE) params.set('perPage', String(pp));
+        const qs = params.toString();
+        return `/latest${qs ? `?${qs}` : ''}`;
+    };
 
     return (
         <div className="bg-white dark:bg-zinc-950 min-h-screen flex flex-col font-sans text-gray-900 dark:text-gray-100">
@@ -46,11 +65,26 @@ export default async function LatestPage({ searchParams }: PageProps) {
                             </h1>
                         </header>
 
+                        {/* Result count + per-page picker */}
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                                {totalArticles} artikel
+                            </p>
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
+                                <span>Tampilkan:</span>
+                                {PER_PAGE_OPTIONS.map(opt => (
+                                    <Link key={opt} href={buildPerPageUrl(opt)}
+                                        className={`px-2 py-1 rounded transition-colors ${perPage === opt ? 'text-brand-green bg-green-50 dark:bg-green-950/30' : 'hover:text-brand-green'}`}>
+                                        {opt}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="flex flex-col">
                             {articles.map((article) => (
                                 <article key={article.id} className="group">
-
-                                    {/* Mobile: compact NYPost-style row */}
+                                    {/* Mobile */}
                                     <Link
                                         href={`/article/${article.slug}`}
                                         className="sm:hidden flex items-center gap-3 py-3 border-b border-zinc-100 dark:border-zinc-800"
@@ -65,41 +99,31 @@ export default async function LatestPage({ searchParams }: PageProps) {
                                         </div>
                                     </Link>
 
-                                    {/* Desktop: original card — untouched */}
+                                    {/* Desktop */}
                                     <div className="hidden sm:flex gap-5 bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl p-4 mb-4 shadow-sm hover:shadow-md transition-all duration-300">
                                         <div className="relative w-52 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900 aspect-[4/3]">
-                                            <Image
-                                                src={article.image}
-                                                alt={article.title}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
+                                            <Image src={article.image} alt={article.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                                             <span className="absolute top-3 left-3 bg-zinc-950/80 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-sm">
                                                 {article.category}
                                             </span>
                                         </div>
                                         <div className="flex flex-col flex-1 justify-between py-1 gap-2">
                                             <div className="flex flex-col gap-1.5">
-                                                <span className="text-[11px] font-semibold text-brand-green uppercase tracking-wider">
-                                                    {article.author}
-                                                </span>
+                                                <span className="text-[11px] font-semibold text-brand-green uppercase tracking-wider">{article.author}</span>
                                                 <Link href={`/article/${article.slug}`}>
                                                     <h2 className="font-bold text-xl sm:text-2xl leading-snug group-hover:text-primary text-zinc-900 dark:text-white line-clamp-2 transition-colors">
                                                         {article.title}
                                                     </h2>
                                                 </Link>
-                                                {article.excerpt ? (
-                                                    <p className="text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1">
-                                                        {article.excerpt}
-                                                    </p>
-                                                ) : null}
+                                                {article.excerpt && (
+                                                    <p className="text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1">{article.excerpt}</p>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                                                 <span>{article.publishedAt}</span>
                                             </div>
                                         </div>
                                     </div>
-
                                 </article>
                             ))}
                         </div>
@@ -107,7 +131,7 @@ export default async function LatestPage({ searchParams }: PageProps) {
                         {/* Pagination */}
                         {totalPages > 1 && (
                             <>
-                                {/* Mobile pagination: windowed with ellipsis */}
+                                {/* Mobile */}
                                 {(() => {
                                     const pages: (number | "...")[] = [];
                                     if (totalPages <= 7) {
@@ -122,25 +146,19 @@ export default async function LatestPage({ searchParams }: PageProps) {
                                     return (
                                         <div className="sm:hidden flex items-center justify-center gap-1 mt-8 flex-wrap">
                                             {currentPage > 1 ? (
-                                                <Link href={`/latest?page=${currentPage - 1}`} className="flex items-center px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                                                    ←
-                                                </Link>
+                                                <Link href={buildPageUrl(currentPage - 1)} className="flex items-center px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">←</Link>
                                             ) : (
                                                 <span className="flex items-center px-3 py-2 text-sm font-semibold text-zinc-300 dark:text-zinc-600 border border-zinc-100 dark:border-zinc-800 rounded-xl cursor-not-allowed">←</span>
                                             )}
-                                            {pages.map((p, i) =>
-                                                p === "..." ? (
-                                                    <span key={`ellipsis-${i}`} className="w-8 h-9 flex items-center justify-center text-sm text-zinc-400 dark:text-zinc-500">…</span>
-                                                ) : (
-                                                    <Link key={p} href={`/latest?page=${p}`}
-                                                        className={`w-9 h-9 flex items-center justify-center text-sm font-bold rounded-xl transition-colors ${p === currentPage ? "bg-brand-green text-white" : "text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
-                                                    >{p}</Link>
-                                                )
-                                            )}
+                                            {pages.map((p, i) => p === "..." ? (
+                                                <span key={`e-${i}`} className="w-8 h-9 flex items-center justify-center text-sm text-zinc-400 dark:text-zinc-500">…</span>
+                                            ) : (
+                                                <Link key={p} href={buildPageUrl(p as number)}
+                                                    className={`w-9 h-9 flex items-center justify-center text-sm font-bold rounded-xl transition-colors ${p === currentPage ? "bg-brand-green text-white" : "text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
+                                                >{p}</Link>
+                                            ))}
                                             {currentPage < totalPages ? (
-                                                <Link href={`/latest?page=${currentPage + 1}`} className="flex items-center px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                                                    →
-                                                </Link>
+                                                <Link href={buildPageUrl(currentPage + 1)} className="flex items-center px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">→</Link>
                                             ) : (
                                                 <span className="flex items-center px-3 py-2 text-sm font-semibold text-zinc-300 dark:text-zinc-600 border border-zinc-100 dark:border-zinc-800 rounded-xl cursor-not-allowed">→</span>
                                             )}
@@ -148,24 +166,20 @@ export default async function LatestPage({ searchParams }: PageProps) {
                                     );
                                 })()}
 
-                                {/* Desktop pagination: full page numbers */}
+                                {/* Desktop */}
                                 <div className="hidden sm:flex items-center justify-center gap-2 mt-10 flex-wrap">
                                     {currentPage > 1 ? (
-                                        <Link href={`/latest?page=${currentPage - 1}`} className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                                            ← Prev
-                                        </Link>
+                                        <Link href={buildPageUrl(currentPage - 1)} className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">← Prev</Link>
                                     ) : (
                                         <span className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-300 dark:text-zinc-600 border border-zinc-100 dark:border-zinc-800 rounded-xl cursor-not-allowed">← Prev</span>
                                     )}
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                                        <Link key={p} href={`/latest?page=${p}`}
+                                        <Link key={p} href={buildPageUrl(p)}
                                             className={`w-9 h-9 flex items-center justify-center text-sm font-bold rounded-xl transition-colors ${p === currentPage ? "bg-brand-green text-white" : "text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
                                         >{p}</Link>
                                     ))}
                                     {currentPage < totalPages ? (
-                                        <Link href={`/latest?page=${currentPage + 1}`} className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                                            Next →
-                                        </Link>
+                                        <Link href={buildPageUrl(currentPage + 1)} className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">Next →</Link>
                                     ) : (
                                         <span className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-300 dark:text-zinc-600 border border-zinc-100 dark:border-zinc-800 rounded-xl cursor-not-allowed">Next →</span>
                                     )}
@@ -174,7 +188,6 @@ export default async function LatestPage({ searchParams }: PageProps) {
                         )}
                     </main>
 
-                    {/* Sidebar — matches category page sticky style */}
                     <aside className="w-full lg:w-[30%] shrink-0 flex flex-col justify-end mt-2 lg:mt-0">
                         <div className="lg:sticky lg:bottom-0 flex flex-col gap-6 pb-12">
                             <TrendingNow articles={trending} />
