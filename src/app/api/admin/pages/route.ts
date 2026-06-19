@@ -36,7 +36,9 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { slug, title, content } = await req.json();
+    const body = await req.json();
+    const { slug, title, ...otherFields } = body;
+    
     if (!slug || !title) {
       return NextResponse.json({ error: "Slug and title are required" }, { status: 400 });
     }
@@ -54,7 +56,7 @@ export async function PUT(req: NextRequest) {
 
     pages[slug] = {
       title,
-      content: content || "",
+      ...otherFields,
     };
 
     fs.writeFileSync(PAGES_FILE, JSON.stringify(pages, null, 2));
