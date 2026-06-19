@@ -51,7 +51,7 @@ export default function Footer() {
         fetchFooterAd();
     }, []);
 
-    const activePageSlugs = settings?.footerShowPages || ["about", "redaksi", "disclaimer", "pedoman-media", "privacy-policy", "terms-of-service"];
+    const activePageSlugs = settings?.footerShowPages ?? ["about", "redaksi", "disclaimer", "pedoman-media", "privacy-policy", "terms-of-service"];
 
     const allCompanyLinks = [
         { key: 'about', label: pages?.about?.title || 'Tentang Kami', href: '/about' },
@@ -68,7 +68,7 @@ export default function Footer() {
     const isFooterCustomLogo = !!(settings?.footerLogo || settings?.siteLogo);
     const footerDesc = settings?.footerDescription || "Portal Berita Aceh & Indonesia Terkini";
 
-    const footerCategories = settings?.footerShowCategories || [
+    const footerCategories = settings?.footerShowCategories ?? [
         { name: 'Utama (Home)', slug: '' },
         { name: 'Aceh', slug: 'aceh' },
         { name: 'Budaya', slug: 'budaya' },
