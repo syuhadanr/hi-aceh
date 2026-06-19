@@ -5,6 +5,9 @@ import Navigation from "@/components/layout/Navigation";
 import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from "@/components/layout/Footer";
 
+
+export const dynamic = "force-dynamic";
+
 export default function EditorialPolicyPage() {
   return (
     <div className="bg-white dark:bg-zinc-950 min-h-screen flex flex-col font-sans">

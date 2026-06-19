@@ -5,6 +5,8 @@ import TopBar from "@/components/layout/TopBar";
 import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from "@/components/layout/Footer";
 
+export const dynamic = "force-dynamic";
+
 export default function AboutPage() {
   const PAGES_FILE = path.join(process.cwd(), "src", "data", "pages.json");
   let pageData = {
