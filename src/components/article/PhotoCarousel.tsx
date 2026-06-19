@@ -59,9 +59,11 @@ export default function PhotoCarousel({ photos }: { photos: Photo[] }) {
                     </>
                 )}
                 {/* Counter */}
-                <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded font-sans">
-                    {current + 1} / {photos.length}
-                </div>
+               {photos.length > 1 && (
+    <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded font-sans">
+        {current + 1} / {photos.length}
+    </div>
+)}
                 {/* Caption overlay */}
                 {photos[current].caption && (
                     <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">

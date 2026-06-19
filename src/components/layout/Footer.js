@@ -12,7 +12,7 @@ export default function Footer() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await fetch('/api/settings');
+                const res = await fetch('/api/settings', { cache: 'no-store' });
                 if (res.ok) {
                     const data = await res.json();
                     setSettings(data);
@@ -24,7 +24,7 @@ export default function Footer() {
 
         const fetchPages = async () => {
             try {
-                const res = await fetch('/api/pages');
+                const res = await fetch('/api/pages', { cache: 'no-store' });
                 if (res.ok) {
                     const data = await res.json();
                     setPages(data);
@@ -36,7 +36,7 @@ export default function Footer() {
 
         const fetchFooterAd = async () => {
             try {
-                const res = await fetch('/api/ads?location=FOOTER_BOTTOM');
+                const res = await fetch('/api/ads?location=FOOTER_BOTTOM', { cache: 'no-store' });
                 if (res.ok) {
                     const data = await res.json();
                     setFooterAd(data);

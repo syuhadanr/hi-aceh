@@ -32,7 +32,7 @@
     {
       "name": "JEPANG",
       "slug": "jepang",
-      "visible": true
+      "visible": false
     },
     {
       "name": "EKONOMI",
@@ -85,56 +85,8 @@
   "footerDescription": "Portal Berita Aceh & Indonesia Terkini",
   "footerShowCategories": [
     {
-      "name": "Wisata",
-      "slug": "wisata"
-    },
-    {
       "name": "Aceh",
       "slug": "aceh"
-    },
-    {
-      "name": "Budaya",
-      "slug": "budaya"
-    },
-    {
-      "name": "Daerah",
-      "slug": "daerah"
-    },
-    {
-      "name": "Ekonomi",
-      "slug": "ekonomi"
-    },
-    {
-      "name": "Gaya Hidup",
-      "slug": "gaya-hidup"
-    },
-    {
-      "name": "Global",
-      "slug": "global"
-    },
-    {
-      "name": "JEPANG",
-      "slug": "jepang"
-    },
-    {
-      "name": "Indonesia",
-      "slug": "indonesia"
-    },
-    {
-      "name": "Kesehatan",
-      "slug": "kesehatan"
-    },
-    {
-      "name": "Nasional",
-      "slug": "nasional"
-    },
-    {
-      "name": "Politik",
-      "slug": "politik"
-    },
-    {
-      "name": "Test",
-      "slug": "test"
     }
   ],
   "footerShowPages": [

@@ -8,7 +8,7 @@ import { useEffect } from "react";
 function FaviconUpdater() {
   useEffect(() => {
     // Fetch public settings and apply favicon dynamically
-    fetch("/api/settings")
+    fetch("/api/settings", { cache: 'no-store' })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data?.favicon) {

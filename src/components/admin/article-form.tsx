@@ -9,18 +9,13 @@ import {
   Save,
   Send,
   ArrowLeft,
-  FileText,
   Flame,
   Star,
   Clock,
   Eye,
   Video,
   Camera,
-  ChevronDown,
   X,
-  Plus,
-  Loader2,
-  Image as ImageIcon,
 } from "lucide-react";
 
 // Dynamic import for the rich text editor (TipTap needs browser APIs)
@@ -51,7 +46,7 @@ interface Tag {
 }
 
 interface ArticleFormProps {
-  articleId?: string; // If set, we're editing
+  articleId?: string;
 }
 
 export default function ArticleForm({ articleId }: ArticleFormProps) {
@@ -65,7 +60,8 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [type, setType] = useState<"TEKS" | "FOTO" | "VIDEO">("TEKS");
+  // CHANGED: removed "TEKS", default is now "FOTO"
+  const [type, setType] = useState<"FOTO" | "VIDEO">("FOTO");
   const [videoUrl, setVideoUrl] = useState("");
   const [status, setStatus] = useState<
     "DRAFT" | "PENDING" | "PUBLISHED" | "SCHEDULED"
@@ -92,7 +88,6 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
   // UI state
   const { showToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
 
   // Photo carousel & Media selector state
@@ -161,7 +156,6 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
           fetch("/api/admin/tags"),
         ];
 
-        // Load existing article if editing
         if (articleId) {
           requests.push(fetch(`/api/admin/articles/${articleId}`));
         }
@@ -176,7 +170,6 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
           const article = await artRes.json();
           setTitle(article.title);
 
-          // If article is FOTO type, try to parse JSON content
           if (article.type === "FOTO") {
             try {
               const parsed = JSON.parse(article.content);
@@ -194,7 +187,8 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
           }
 
           setExcerpt(article.excerpt || "");
-          setType(article.type || "TEKS");
+          // CHANGED: fallback to "FOTO" instead of "TEKS"
+          setType(article.type === "VIDEO" ? "VIDEO" : "FOTO");
           setVideoUrl(article.videoUrl || "");
           setStatus(article.status || "DRAFT");
           setIsBreaking(article.isBreaking || false);
@@ -241,7 +235,6 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
     }
   }, [session, isEditing, authorId]);
 
-
   const handleSave = async (saveStatus?: string) => {
     setIsSaving(true);
 
@@ -287,7 +280,6 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
           "success"
         );
         if (!isEditing) {
-          // Redirect to edit page after creation
           setTimeout(() => {
             router.push(`/admin/articles/${data.id}/edit`);
           }, 1200);
@@ -300,16 +292,33 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
     }
   };
 
-  const toggleTag = (tagId: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    );
-  };
-
   const filteredTags = tags.filter((t) =>
     t.name.toLowerCase().includes(tagSearch.toLowerCase())
+  );
+
+  // Reusable type selector buttons (used in both mobile inline + desktop sidebar)
+  const TypeSelector = () => (
+    <div className="grid grid-cols-2 gap-2">
+      {(
+        [
+          { value: "FOTO", icon: Camera, label: "Foto" },
+          { value: "VIDEO", icon: Video, label: "Video" },
+        ] as const
+      ).map((t) => (
+        <button
+          key={t.value}
+          onClick={() => setType(t.value)}
+          className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+            type === t.value
+              ? "border-teal-500/30 bg-teal-500/5 text-teal-650 dark:text-teal-400"
+              : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          }`}
+        >
+          <t.icon className="w-4 h-4" />
+          {t.label}
+        </button>
+      ))}
+    </div>
   );
 
   if (isLoadingData) {
@@ -321,53 +330,97 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/admin/articles")}
-            className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-              {isEditing ? "Edit Artikel" : "Artikel Baru"}
-            </h2>
-            {generatedSlug && (
-              <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
-                /{generatedSlug}
-              </p>
-            )}
+    <div className="max-w-7xl mx-auto space-y-4">
+
+      {/* Top Bar — desktop: title left + buttons right; mobile: title row then buttons row below */}
+      <div>
+        {/* Desktop layout: single row with title left, buttons right */}
+        <div className="hidden lg:flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push("/admin/articles")}
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                {isEditing ? "Edit Artikel" : "Artikel Baru"}
+              </h2>
+              {generatedSlug && (
+                <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                  /{generatedSlug}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleSave("DRAFT")}
+              disabled={isSaving || !title || !categoryId}
+              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              Simpan Draft
+            </button>
+            <button
+              onClick={() => handleSave("PUBLISHED")}
+              disabled={isSaving || !title || !content || !categoryId}
+              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+              {isSaving ? "Menyimpan..." : "Publikasikan"}
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleSave("DRAFT")}
-            disabled={isSaving || !title || !categoryId}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 disabled:opacity-50 transition-colors cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            Simpan Draft
-          </button>
-          <button
-            onClick={() => handleSave("PUBLISHED")}
-            disabled={isSaving || !title || !content || !categoryId}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
-          >
-            <Send className="w-4 h-4" />
-            {isSaving ? "Menyimpan..." : "Publikasikan"}
-          </button>
+
+        {/* Mobile layout: title row, then full-width buttons below */}
+        <div className="lg:hidden space-y-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push("/admin/articles")}
+              className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 transition-colors cursor-pointer flex-shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">
+                {isEditing ? "Edit Artikel" : "Artikel Baru"}
+              </h2>
+              {generatedSlug && (
+                <p className="text-[10px] text-zinc-400 font-mono mt-0.5 truncate">
+                  /{generatedSlug}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleSave("DRAFT")}
+              disabled={isSaving || !title || !categoryId}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5" />
+              Simpan Draft
+            </button>
+            <button
+              onClick={() => handleSave("PUBLISHED")}
+              disabled={isSaving || !title || !content || !categoryId}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {isSaving ? "Menyimpan..." : "Publikasikan"}
+            </button>
+          </div>
         </div>
       </div>
 
-
-
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+
         {/* Left Column - Main Content */}
         <div className="space-y-5">
+
           {/* Title */}
           <div>
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
@@ -383,7 +436,15 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             />
           </div>
 
-          {/* Video URL (on top of konten artikel when type is VIDEO) */}
+          {/* MOBILE ONLY: Article Type selector — shown inline after title on small screens */}
+          <div className="lg:hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
+              Tipe Artikel
+            </label>
+            <TypeSelector />
+          </div>
+
+          {/* Video URL */}
           {type === "VIDEO" && (
             <div>
               <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
@@ -399,7 +460,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             </div>
           )}
 
-          {/* Photo Gallery/Carousel Manager (on top of konten artikel when type is FOTO) */}
+          {/* Photo Gallery/Carousel Manager */}
           {type === "FOTO" && (
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
@@ -426,7 +487,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploadingPhoto}
-                    className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-semibold rounded-lg bg-teal-605 hover:bg-teal-500 bg-teal-600 text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {isUploadingPhoto ? "Mengunggah..." : "+ Unggah Foto"}
                   </button>
@@ -542,12 +603,12 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             <RichTextEditor content={content} onChange={setContent} />
           </div>
 
-
         </div>
 
         {/* Right Column - Sidebar Settings */}
         <div className="space-y-5">
-          {/* Schedule - MOVED TO TOP */}
+
+          {/* Schedule */}
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -590,35 +651,15 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             )}
           </div>
 
-          {/* Article Type */}
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+          {/* DESKTOP ONLY: Article Type selector */}
+          <div className="hidden lg:block rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
               Tipe Artikel
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(
-                [
-                  { value: "TEKS", icon: FileText, label: "Teks" },
-                  { value: "FOTO", icon: Camera, label: "Foto" },
-                  { value: "VIDEO", icon: Video, label: "Video" },
-                ] as const
-              ).map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => setType(t.value)}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${type === t.value
-                    ? "border-teal-500/30 bg-teal-500/5 text-teal-650 dark:text-teal-400"
-                    : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                    }`}
-                >
-                  <t.icon className="w-4 h-4" />
-                  {t.label}
-                </button>
-              ))}
-            </div>
+            <TypeSelector />
           </div>
 
-          {/* Category - Open layout grid matching Admin Meseraya style */}
+          {/* Category */}
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2.5">
               Rubrik / Kategori *
@@ -690,7 +731,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             </div>
           )}
 
-          {/* Sumber Berita (Teks & Tautan) */}
+          {/* Sumber Berita */}
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm space-y-3">
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Sumber Berita
@@ -719,7 +760,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             </div>
           </div>
 
-          {/* Tags - Comma Separated Text Input */}
+          {/* Tags */}
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
             <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
               Penanda (Tag)
@@ -744,12 +785,10 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             <label className="flex items-center gap-3 cursor-pointer group">
               <div
                 onClick={() => setIsBreaking(!isBreaking)}
-                className={`relative w-9 h-5 rounded-full transition-colors ${isBreaking ? "bg-red-500" : "bg-zinc-300 dark:bg-zinc-700"
-                  }`}
+                className={`relative w-9 h-5 rounded-full transition-colors ${isBreaking ? "bg-red-500" : "bg-zinc-300 dark:bg-zinc-700"}`}
               >
                 <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${isBreaking ? "translate-x-4" : ""
-                    }`}
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${isBreaking ? "translate-x-4" : ""}`}
                 />
               </div>
               <div className="flex items-center gap-1.5">
@@ -762,14 +801,10 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
             <label className="flex items-center gap-3 cursor-pointer group">
               <div
                 onClick={() => setIsFeatured(!isFeatured)}
-                className={`relative w-9 h-5 rounded-full transition-colors ${isFeatured
-                  ? "bg-amber-500"
-                  : "bg-zinc-300 dark:bg-zinc-700"
-                  }`}
+                className={`relative w-9 h-5 rounded-full transition-colors ${isFeatured ? "bg-amber-500" : "bg-zinc-300 dark:bg-zinc-700"}`}
               >
                 <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${isFeatured ? "translate-x-4" : ""
-                    }`}
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${isFeatured ? "translate-x-4" : ""}`}
                 />
               </div>
               <div className="flex items-center gap-1.5">
@@ -838,10 +873,11 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
                             setPhotos((prev) => [...prev, { url: item.url, caption: "" }]);
                           }
                         }}
-                        className={`group relative aspect-square rounded-lg overflow-hidden bg-zinc-50 dark:bg-zinc-900 cursor-pointer border-2 transition-all ${isSelected
-                          ? "border-teal-500 ring-2 ring-teal-500/20"
-                          : "border-transparent hover:border-zinc-350 dark:hover:border-zinc-700"
-                          }`}
+                        className={`group relative aspect-square rounded-lg overflow-hidden bg-zinc-50 dark:bg-zinc-900 cursor-pointer border-2 transition-all ${
+                          isSelected
+                            ? "border-teal-500 ring-2 ring-teal-500/20"
+                            : "border-transparent hover:border-zinc-350 dark:hover:border-zinc-700"
+                        }`}
                       >
                         <img
                           src={item.url}
