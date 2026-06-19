@@ -22,6 +22,7 @@ const RichTextEditor = dynamic(
 
 const PAGE_NAMES: Record<string, string> = {
   about: "Tentang Kami",
+  contact: "Hubungi Kami",
   redaksi: "Susunan Redaksi",
   disclaimer: "Disclaimer",
   "pedoman-media": "Pedoman Pemberitaan Media Siber",

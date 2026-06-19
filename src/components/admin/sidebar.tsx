@@ -37,6 +37,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [pageTitles, setPageTitles] = useState<Record<string, string>>({
     about: "Tentang Kami",
     redaksi: "Susunan Redaksi",
+    contact: "Hubungi Kami",
     disclaimer: "Disclaimer",
     "pedoman-media": "Pedoman Media",
     "privacy-policy": "Kebijakan Privasi",
@@ -121,6 +122,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       submenu: [
         { name: pageTitles.about, href: "/admin/pages/about" },
         { name: pageTitles.redaksi, href: "/admin/pages/redaksi" },
+        { name: pageTitles.contact, href: "/admin/pages/contact" },
         { name: pageTitles.disclaimer, href: "/admin/pages/disclaimer" },
         { name: pageTitles["pedoman-media"], href: "/admin/pages/pedoman-media" },
         { name: pageTitles["privacy-policy"], href: "/admin/pages/privacy-policy" },

@@ -27,11 +27,11 @@ export default function PhotoCarousel({ photos }: { photos: Photo[] }) {
 
     return (
         <div className="mb-8">
-            {/* Main image — sizes dynamically to the current photo's aspect ratio */}
-          <div
-    className="relative w-full max-h-[80vh] bg-gray-100 dark:bg-zinc-800 overflow-hidden transition-all duration-300 mx-auto"
-    style={{ aspectRatio: currentRatio }}
->
+            {/* Main image */}
+            <div
+                className="relative w-full max-h-[80vh] bg-gray-100 dark:bg-zinc-800 overflow-hidden transition-all duration-300 mx-auto"
+                style={{ aspectRatio: currentRatio }}
+            >
                 <Image
                     src={photos[current].url}
                     alt={photos[current].caption || `Foto ${current + 1}`}
@@ -59,18 +59,19 @@ export default function PhotoCarousel({ photos }: { photos: Photo[] }) {
                     </>
                 )}
                 {/* Counter */}
-               {photos.length > 1 && (
-    <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded font-sans">
-        {current + 1} / {photos.length}
-    </div>
-)}
-                {/* Caption overlay */}
-                {photos[current].caption && (
-                    <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
-                        <p className="text-white text-xs font-sans">{photos[current].caption}</p>
+                {photos.length > 1 && (
+                    <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded font-sans">
+                        {current + 1} / {photos.length}
                     </div>
                 )}
             </div>
+
+            {/* Caption — outside image div, below photo, above thumbnails */}
+            {photos[current].caption && (
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 italic font-serif leading-snug px-1">
+                    {photos[current].caption}
+                </p>
+            )}
 
             {/* Thumbnail strip */}
             {photos.length > 1 && (
@@ -79,10 +80,11 @@ export default function PhotoCarousel({ photos }: { photos: Photo[] }) {
                         <button
                             key={idx}
                             onClick={() => setCurrent(idx)}
-                            className={`relative shrink-0 w-16 h-12 overflow-hidden rounded border-2 transition-all ${idx === current
+                            className={`relative shrink-0 w-16 h-12 overflow-hidden rounded border-2 transition-all ${
+                                idx === current
                                     ? "border-brand-green"
                                     : "border-transparent opacity-60 hover:opacity-100"
-                                }`}
+                            }`}
                         >
                             <Image src={photo.url} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
                         </button>

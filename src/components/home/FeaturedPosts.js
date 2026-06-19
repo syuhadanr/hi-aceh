@@ -33,14 +33,11 @@ export default function FeaturedPosts({ articles }) {
                 {mobileList.slice(0, 3).map((post, idx) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
-                            <Image src={post.image} alt={post.title} fill className="object-cover" />
-                            <div className="absolute top-0 left-0 bg-brand-green text-white text-[10px] font-bold px-1.5 py-0.5">
-                                {idx + 1}
-                            </div>
+                            <Image src={post.image} alt={post.title} fill className="object-cover" />                         
                         </div>
                         <div className="flex flex-col justify-between py-0.5">
                             <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{post.category}</span>
-                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">{post.title}</h4>
+                           <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans">{post.title}</h4>
                             <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
                         </div>
                     </a>
@@ -57,13 +54,10 @@ export default function FeaturedPosts({ articles }) {
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                             <Image src={post.image} alt={post.title} fill className="object-cover" />
-                            <div className="absolute top-0 left-0 bg-brand-green text-white text-[10px] font-bold px-1.5 py-0.5">
-                                {idx + 4}
-                            </div>
                         </div>
                         <div className="flex flex-col justify-between py-0.5">
                             <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{post.category}</span>
-                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">{post.title}</h4>
+                            <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans">{post.title}</h4>
                             <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
                         </div>
                     </a>

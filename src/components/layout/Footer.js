@@ -56,6 +56,7 @@ export default function Footer() {
     const allCompanyLinks = [
         { key: 'about', label: pages?.about?.title || 'Tentang Kami', href: '/about' },
         { key: 'redaksi', label: pages?.redaksi?.title || 'Susunan Redaksi', href: '/redaksi' },
+        { key: 'contact', label: pages?.contact?.title || 'Hubungi Kami', href: '/contact' },
         { key: 'disclaimer', label: pages?.disclaimer?.title || 'Disclaimer', href: '/disclaimer' },
         { key: 'pedoman-media', label: pages?.['pedoman-media']?.title || 'Pedoman Pemberitaan Media Siber', href: '/pedoman-media' },
     ];

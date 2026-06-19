@@ -59,6 +59,7 @@ interface SystemSettings {
 const PAGE_KEYS = [
   { key: "about", label: "Tentang Kami" },
   { key: "redaksi", label: "Susunan Redaksi" },
+  { key: "contact", label: "Hubungi Kami" },
   { key: "disclaimer", label: "Disclaimer" },
   { key: "pedoman-media", label: "Pedoman Pemberitaan Media Siber" },
   { key: "privacy-policy", label: "Kebijakan Privasi" },
