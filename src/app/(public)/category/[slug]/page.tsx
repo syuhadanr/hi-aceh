@@ -6,7 +6,6 @@ import TopBar from "@/components/layout/TopBar";
 import TrendingNow from "@/components/home/TrendingNow";
 import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from "@/components/layout/Footer";
-import AdSlot from "@/components/ads/AdSlot";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -220,7 +219,6 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           <aside className="w-full lg:w-[32%] flex flex-col justify-end mt-8 lg:mt-0">
             <div className="lg:sticky lg:bottom-0 flex flex-col gap-8 pb-8">
               <TrendingNow articles={trending} />
-              <AdSlot position="SIDEBAR" className="mb-4" />
 
               {/* Berita Terbaru */}
               <div className="bg-white dark:bg-zinc-950">

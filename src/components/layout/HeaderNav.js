@@ -18,22 +18,8 @@ export default function HeaderNav({ activeCategory }) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const [hasHeaderAd, setHasHeaderAd] = useState(false);
-
-    useEffect(() => {
-        const checkAd = async () => {
-            try {
-                const res = await fetch('/api/ads?location=HEADER_TOP');
-                if (res.ok) {
-                    const data = await res.json();
-                    setHasHeaderAd(!!data);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        checkAd();
-    }, []);
+    // HEADER_TOP removed — do not fetch or render header-top ads
+    const [hasHeaderAd] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -191,12 +177,7 @@ export default function HeaderNav({ activeCategory }) {
                             />
                         </div>
 
-                        {/* Ad slot */}
-                        <div className="flex items-center justify-center">
-                            <div className="w-full max-w-[728px] aspect-[8/1] overflow-hidden">
-                                <AdSlot position="HEADER_TOP" className="w-full h-full" />
-                            </div>
-                        </div>
+                        {/* Header-top ad removed */}
 
                         {/* Right controls */}
                         <div className="flex items-center gap-4 justify-end">

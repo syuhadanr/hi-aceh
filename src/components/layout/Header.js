@@ -14,22 +14,8 @@ export default function Header() {
     const searchBtnRef = useRef(null);
     const router = useRouter();
 
-    const [hasHeaderAd, setHasHeaderAd] = useState(false);
-
-    useEffect(() => {
-        const checkAd = async () => {
-            try {
-                const res = await fetch('/api/ads?location=HEADER_TOP');
-                if (res.ok) {
-                    const data = await res.json();
-                    setHasHeaderAd(!!data);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        checkAd();
-    }, []);
+    // HEADER_TOP removed — header should no longer fetch or render header-top ads
+    const [hasHeaderAd] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -124,12 +110,7 @@ export default function Header() {
                         )}
                     </div>
 
-                    {/* Middle: Ad Slot — hidden on mobile, centered on desktop only when ad exists */}
-                    {hasHeaderAd && (
-                        <div className="flex items-center justify-center">
-                            <AdSlot position="HEADER_TOP" className="w-full max-w-[728px]" />
-                        </div>
-                    )}
+                    {/* Header-top ad removed */}
 
                     {/* Right Controls (desktop) */}
                     <div className="flex items-center gap-4 justify-end">

@@ -139,18 +139,14 @@ export default async function Home() {
     featuredBriefsArticles[0]?.category ||
     featuredBriefsCategory.charAt(0).toUpperCase() + featuredBriefsCategory.slice(1);
 
-const visibleNavbarSlugs = (settings.navbarCategories || [])
-  .filter((cat: { name: string; slug: string; visible: boolean }) => cat.visible)
-  .map((cat: { name: string; slug: string; visible: boolean }) => cat.slug);
+  const categorySourceSlugs = ['sejarah', 'wisata', 'opini', 'gaya-hidup'];
 
-  const categorySourceSlugs = visibleNavbarSlugs.length > 0
-    ? visibleNavbarSlugs
-    : Array.from(new Set(articles.map((a) => a.categorySlug)));
-
-const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug: string) => {
+  const categoryWidgets = categorySourceSlugs.map((slug: string) => {
     const categoryArticles = articles.filter((a) => a.categorySlug === slug);
-   const categoryNameFromSettings = (settings.navbarCategories || []).find((cat: { name: string; slug: string; visible: boolean }) => cat.slug === slug)?.name;
-   return {
+    const categoryNameFromSettings = (settings.navbarCategories || []).find(
+      (cat: { name: string; slug: string; visible: boolean }) => cat.slug === slug
+    )?.name;
+    return {
       slug,
       title:
         categoryArticles[0]?.category ||
@@ -172,10 +168,13 @@ const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug: string) => {
 
       <div className="w-full max-w-[1200px] mx-auto px-4 py-8 flex-grow">
 
+        <AdSlot position="HEADER_BETWEEN" className="mb-8" />
+
         {/* Top Section: Main News + Popular widget */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 mb-12">
           <div className="lg:col-span-8 order-1 lg:order-none">
             <MainNews articles={heroArticles} />
+            <AdSlot position="MAIN_BELOW_HEADLINE" className="mt-8" />
           </div>
 
           <div className="block lg:hidden order-2">
@@ -184,13 +183,32 @@ const categoryWidgets = categorySourceSlugs.slice(0, 8).map((slug: string) => {
 
           <div className="lg:col-span-4 order-3 lg:order-none">
             <PopularWidget articles={popularList} />
+            <AdSlot position="POPULAR_BELOW" className="mt-8" />
           </div>
         </div>
 
-        {/* Featured Posts */}
-       <div className="mb-12 hidden lg:block">
-    <FeaturedPosts articles={featured.slice(0, 20)} />
-</div>
+        {/* Featured Posts (left) + Ads (right) on desktop */}
+        <div className="mb-12 hidden lg:grid lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8">
+            <FeaturedPosts articles={featured.slice(0, 20)} />
+          </div>
+          <aside className="lg:col-span-4">
+            <div className="lg:sticky lg:top-24 flex flex-col gap-6">
+              <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6">
+                <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-4">Iklan</h3>
+                <div className="flex flex-col gap-4">
+                  <AdSlot position="FEED_ASIDE_TOP" />
+                  <AdSlot position="FEED_ASIDE_MID" />
+                  <AdSlot position="FEED_ASIDE_BOTTOM" />
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div className="mb-12">
+          <AdSlot position="FEED_AFTER_SELESAI" className="mb-8" />
+        </div>
 
         {/* Featured Briefs Section */}
         <div className="hidden mb-12">

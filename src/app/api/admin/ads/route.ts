@@ -1,33 +1,39 @@
 import { NextResponse } from "next/server";
-import { db as prisma } from "@/lib/db";
+import { db } from "@/lib/db";
+import { auth } from "src/auth";
 
-export async function GET(request: Request) {
+export async function GET() {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const location = searchParams.get("location");
-
-    const ads = await prisma.ad.findMany({
-      where: location ? { location: location as any } : undefined,
-      orderBy: { createdAt: 'desc' }
+    const ads = await db.ad.findMany({
+      orderBy: { createdAt: "desc" },
     });
-
     return NextResponse.json(ads);
-  } catch (error: any) {
-    console.error("GET /api/admin/ads error:", error);
-    return NextResponse.json({ error: error.message || "Failed to fetch ads" }, { status: 500 });
+  } catch (error) {
+    console.error("Ads fetch error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const body = await request.json();
+    const body = await req.json();
     const { title, type, location, imageUrl, linkUrl, scriptCode, status, startDate, endDate, ratio } = body;
 
     if (!title || !location) {
-      return NextResponse.json({ error: "Title and location are required" }, { status: 400 });
+      return NextResponse.json({ error: "Title and Location are required" }, { status: 400 });
     }
 
-    const newAd = await prisma.ad.create({
+    const ad = await db.ad.create({
       data: {
         title,
         type: type || "IMAGE_BANNER",
@@ -35,16 +41,16 @@ export async function POST(request: Request) {
         imageUrl: imageUrl || null,
         linkUrl: linkUrl || null,
         scriptCode: scriptCode || null,
-        status: status !== undefined ? status : true,
+        status: typeof status === "boolean" ? status : true,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         ratio: ratio || "1:1",
-      }
+      },
     });
 
-    return NextResponse.json(newAd, { status: 201 });
-  } catch (error: any) {
-    console.error("POST /api/admin/ads error:", error);
-    return NextResponse.json({ error: error.message || "Failed to create ad" }, { status: 500 });
+    return NextResponse.json(ad);
+  } catch (error) {
+    console.error("Ad creation error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

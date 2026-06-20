@@ -3,19 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import AdSlot from '@/components/ads/AdSlot';
-import { useState, useEffect } from 'react';
 
 export default function FeaturedPosts({ articles }) {
     const list = (articles || []).slice(0, 20);
     const mobileList = (articles || []).slice(0, 20);
-    const [feedAd, setFeedAd] = useState(null);
-
-    useEffect(() => {
-        fetch('/api/ads?location=FEED_INLINE_1')
-            .then(r => r.ok ? r.json() : null)
-            .then(data => setFeedAd(data))
-            .catch(() => {});
-    }, []);
 
     if (!list || list.length === 0) return null;
 
@@ -43,13 +34,6 @@ export default function FeaturedPosts({ articles }) {
                     </a>
                 ))}
 
-                {feedAd && (
-                    <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
-                        <AdSlot position="FEED_INLINE_1" />
-                    </div>
-                )}
-
                 {mobileList.slice(3).map((post, idx) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
@@ -72,12 +56,18 @@ export default function FeaturedPosts({ articles }) {
 
             {/* Desktop: search-style cards */}
             <div className="hidden sm:flex flex-col gap-4">
-                {[...list.slice(0, 3), ...(feedAd ? ['__ad__'] : []), ...list.slice(3)].map((post) => {
-                    if (post === '__ad__') {
+                {[
+                ...[list[0]].filter(Boolean),
+                ...(list.length > 1 ? [{ __slot: 'FEED_INLINE_1' }] : []),
+                ...[list[1]].filter(Boolean),
+                ...(list.length > 2 ? [{ __slot: 'FEED_INLINE_2' }] : []),
+                ...list.slice(2),
+            ].map((post, idx) => {
+                    if (post && post.__slot) {
                         return (
-                            <div key="ad-slot" className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
+                            <div key={`ad-slot-${idx}`} className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
                                 <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
-                                <AdSlot position="FEED_INLINE_1" />
+                                <AdSlot position={post.__slot} />
                             </div>
                         );
                     }
