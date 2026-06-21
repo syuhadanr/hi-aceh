@@ -6,6 +6,7 @@ import TopBar from "@/components/layout/TopBar";
 import TrendingNow from "@/components/home/TrendingNow";
 import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from "@/components/layout/Footer";
+import AdSlot, { SidebarAds } from "@/components/ads/AdSlot";
 
 interface PageProps {
     searchParams: Promise<{ page?: string; perPage?: string }>;
@@ -188,9 +189,15 @@ export default async function LatestPage({ searchParams }: PageProps) {
                         )}
                     </main>
 
-                    <aside className="w-full lg:w-[30%] shrink-0 flex flex-col justify-end mt-2 lg:mt-0">
+                    <aside className="w-full lg:w-[32%] shrink-0 flex flex-col justify-end mt-2 lg:mt-0">
                         <div className="lg:sticky lg:bottom-0 flex flex-col gap-6 pb-12">
                             <TrendingNow articles={trending} />
+
+                            {/* Sidebar Ad Slots */}
+                            <SidebarAds />
+
+                            {/* Mobile Ad below Trending */}
+                            <AdSlot position="MOBILE_FEED_AFTER" className="my-4" />
                         </div>
                     </aside>
                 </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import AdSlot from '@/components/ads/AdSlot';
@@ -24,19 +25,6 @@ export default function FeaturedPosts({ articles }) {
                 {mobileList.slice(0, 3).map((post, idx) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
-                            <Image src={post.image} alt={post.title} fill className="object-cover" />                         
-                        </div>
-                        <div className="flex flex-col justify-between py-0.5">
-                            <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{post.category}</span>
-                           <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans">{post.title}</h4>
-                            <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
-                        </div>
-                    </a>
-                ))}
-
-                {mobileList.slice(3).map((post, idx) => (
-                    <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
-                        <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                             <Image src={post.image} alt={post.title} fill className="object-cover" />
                         </div>
                         <div className="flex flex-col justify-between py-0.5">
@@ -45,6 +33,32 @@ export default function FeaturedPosts({ articles }) {
                             <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
                         </div>
                     </a>
+                ))}
+
+                <div className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
+                    <AdSlot position="MOBILE_FEED_1" />
+                </div>
+
+                {mobileList.slice(3).map((post, idx) => (
+                    <React.Fragment key={post.id}>
+                        <a href={`/article/${post.slug}`} className="flex gap-4 group">
+                            <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
+                                <Image src={post.image} alt={post.title} fill className="object-cover" />
+                            </div>
+                            <div className="flex flex-col justify-between py-0.5">
+                                <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{post.category}</span>
+                                <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans">{post.title}</h4>
+                                <span className="text-[10px] text-gray-400 font-sans">{post.publishedAt}</span>
+                            </div>
+                        </a>
+                        {idx === 2 && mobileList.length > 6 && (
+                            <div className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
+                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
+                                <AdSlot position="MOBILE_FEED_2" />
+                            </div>
+                        )}
+                    </React.Fragment>
                 ))}
 
                 <div className="flex justify-center pt-2">
@@ -57,18 +71,15 @@ export default function FeaturedPosts({ articles }) {
             {/* Desktop: search-style cards */}
             <div className="hidden sm:flex flex-col gap-4">
                 {[
-                ...[list[0]].filter(Boolean),
-                ...(list.length > 1 ? [{ __slot: 'FEED_INLINE_1' }] : []),
-                ...[list[1]].filter(Boolean),
-                ...(list.length > 2 ? [{ __slot: 'FEED_INLINE_2' }] : []),
-                ...list.slice(2),
-            ].map((post, idx) => {
+                    ...[list[0]].filter(Boolean),
+                    ...(list.length > 1 ? [{ __slot: 'FEED_INLINE_1' }] : []),
+                    ...[list[1]].filter(Boolean),
+                    ...(list.length > 2 ? [{ __slot: 'FEED_INLINE_2' }] : []),
+                    ...list.slice(2),
+                ].map((post, idx) => {
                     if (post && post.__slot) {
                         return (
-                            <div key={`ad-slot-${idx}`} className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
-                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
-                                <AdSlot position={post.__slot} />
-                            </div>
+                            <AdSlot key={`ad-slot-${idx}`} position={post.__slot} cardPerAd />
                         );
                     }
                     return (
@@ -81,14 +92,13 @@ export default function FeaturedPosts({ articles }) {
                             </div>
                             <div className="flex flex-col flex-1 justify-between py-1 gap-2">
                                 <div className="flex flex-col gap-1.5">
-                                    <span className="text-[11px] font-semibold text-primary uppercase tracking-wider">{post.author}</span>
                                     <Link href={`/article/${post.slug}`}>
-                                        <h3 className="font-bold text-lg leading-snug group-hover:text-primary text-zinc-900 dark:text-white line-clamp-2 transition-colors">
+                                        <h3 className="font-bold text-lg leading-snug group-hover:text-primary text-zinc-900 dark:text-white transition-colors">
                                             {post.title}
                                         </h3>
                                     </Link>
                                     {post.excerpt && (
-                                        <p className="text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1">{post.excerpt}</p>
+                                        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">{post.excerpt}</p>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">

@@ -7,7 +7,6 @@ export default function Footer() {
     const currentYear = new Date().getFullYear();
     const [settings, setSettings] = useState(null);
     const [pages, setPages] = useState(null);
-    const [footerAd, setFooterAd] = useState(null);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -34,21 +33,8 @@ export default function Footer() {
             }
         };
 
-        const fetchFooterAd = async () => {
-            try {
-                const res = await fetch('/api/ads?location=FOOTER_BOTTOM', { cache: 'no-store' });
-                if (res.ok) {
-                    const data = await res.json();
-                    setFooterAd(data);
-                }
-            } catch (e) {
-                console.error('Failed to load footer ad', e);
-            }
-        };
-
         fetchSettings();
         fetchPages();
-        fetchFooterAd();
     }, []);
 
     const activePageSlugs = settings?.footerShowPages ?? ["about", "redaksi", "disclaimer", "pedoman-media", "privacy-policy", "terms-of-service"];
@@ -129,14 +115,7 @@ export default function Footer() {
                     ))}
                 </div>
 
-                {/* Footer ad on mobile */}
-                {footerAd && (
-                    <div className="w-full max-w-[320px] aspect-[16/9] bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center p-1 mb-5 mx-auto">
-                        <a href={footerAd.linkUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={() => fetch(`/api/ads/click?id=${footerAd.id}`).catch(() => {})} className="block w-full h-full">
-                            <img src={footerAd.imageUrl} alt="Sponsor" className="w-full h-full object-contain" />
-                        </a>
-                    </div>
-                )}
+
 
                 {/* Mobile bottom bar */}
                 <div className="border-t border-zinc-800 py-4 flex flex-col items-center gap-1.5 text-[10px] text-zinc-500 text-center">
@@ -197,32 +176,17 @@ export default function Footer() {
 
                         {/* Column 2: Kategori Berita OR Ad Slot */}
                         <div>
-                            {footerAd ? (
-                                <div className="w-full h-full flex flex-col">
-                                    <h3 className="text-xm font-bold uppercase tracking-widest mb-4 text-white border-b border-brand-green pb-2 inline-block font-sans">
-                                        Sponsor
-                                    </h3>
-                                    <div className="relative flex-1 min-h-[120px] bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center p-1">
-                                        <a href={footerAd.linkUrl || "#"} target="_blank" rel="noopener noreferrer" onClick={() => fetch(`/api/ads/click?id=${footerAd.id}`).catch(() => {})} className="block w-full h-full">
-                                            <img src={footerAd.imageUrl} alt="Sponsor" className="w-full h-full object-contain" />
-                                        </a>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <h3 className="text-xm font-bold uppercase tracking-widest mb-4 text-white border-b border-brand-green pb-2 inline-block font-sans">
-                                        Kategori Berita
-                                    </h3>
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                        {footerCategories.map((cat) => (
-                                            <Link key={cat.slug} href={cat.slug ? `/category/${cat.slug}` : '/'}
-                                                className="text-sm text-gray-400 hover:text-brand-green transition-colors">
-                                                {cat.name}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
+                            <h3 className="text-xm font-bold uppercase tracking-widest mb-4 text-white border-b border-brand-green pb-2 inline-block font-sans">
+                                Kategori Berita
+                            </h3>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                {footerCategories.map((cat) => (
+                                    <Link key={cat.slug} href={cat.slug ? `/category/${cat.slug}` : '/'}
+                                        className="text-sm text-gray-400 hover:text-brand-green transition-colors">
+                                        {cat.name}
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Column 3: Perusahaan */}

@@ -11,7 +11,7 @@ import HeaderNav from '@/components/layout/HeaderNav';
 import PopularWidget from "@/components/home/PopularWidget";
 import Footer from "@/components/layout/Footer";
 import { getAllArticles, getTrendingArticles } from "@/lib/data";
-import AdSlot from "@/components/ads/AdSlot";
+import AdSlot, { SidebarAds } from "@/components/ads/AdSlot";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -19,7 +19,6 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const articles = (await getAllArticles()) as any[];
 
-  // If there are too few real articles (dev/testing), append 10 dummy articles
   if (!articles || articles.length < 10) {
     const now = new Date();
     const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -47,37 +46,28 @@ export default async function Home() {
     }
   }
 
-  // Handle empty state gracefully
   if (!articles || articles.length === 0) {
     return (
       <main className="min-h-screen bg-gray-50 dark:bg-zinc-900 flex flex-col font-sans">
         <TopBar />
         <HeaderNav activeCategory={null} />
-
         <div className="container mx-auto px-4 py-16 flex-grow flex flex-col items-center justify-center text-center">
           <div className="bg-white dark:bg-zinc-800 p-8 rounded-lg shadow-sm border border-gray-100 dark:border-zinc-700 max-w-md">
             <i className="material-icons text-6xl text-gray-400 dark:text-zinc-500 mb-4">newspaper</i>
-            <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white mb-2">
-              Belum Ada Berita
-            </h2>
+            <h2 className="text-2xl font-display font-bold text-gray-800 dark:text-white mb-2">Belum Ada Berita</h2>
             <p className="text-gray-500 dark:text-zinc-400 text-sm leading-relaxed mb-6">
               Saat ini belum ada artikel berita yang dipublikasikan. Silakan kembali lagi nanti atau login ke dashboard admin untuk menulis berita baru.
             </p>
-            <a
-              href="/tungkuaceh"
-              className="inline-block bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase px-6 py-3 rounded transition-colors"
-            >
+            <a href="/tungkuaceh" className="inline-block bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase px-6 py-3 rounded transition-colors">
               Tulis Berita
             </a>
           </div>
         </div>
-
         <Footer />
       </main>
     );
   }
 
-  // Helper filters
   const featuredArticles = articles.filter((a) => a.isFeatured);
   const regularArticles = articles.filter((a) => !a.isFeatured);
   const heroArticles = [...featuredArticles, ...regularArticles].slice(0, 5);
@@ -130,9 +120,7 @@ export default async function Home() {
   const featuredBriefsCategory = settings.featuredBriefsCategory || "politik";
 
   const featuredBriefsArticles = articles.filter(
-    (a) =>
-      a.categorySlug === featuredBriefsCategory ||
-      a.category?.toLowerCase() === featuredBriefsCategory
+    (a) => a.categorySlug === featuredBriefsCategory || a.category?.toLowerCase() === featuredBriefsCategory
   );
 
   const featuredBriefsTitle =
@@ -169,6 +157,7 @@ export default async function Home() {
       <div className="w-full max-w-[1200px] mx-auto px-4 py-8 flex-grow">
 
         <AdSlot position="HEADER_BETWEEN" className="mb-8" />
+        <AdSlot position="MOBILE_HEADER" className="mb-8" />
 
         {/* Top Section: Main News + Popular widget */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 mb-12">
@@ -187,27 +176,25 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Featured Posts (left) + Ads (right) on desktop */}
-        <div className="mb-12 hidden lg:grid lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8">
+        {/* Featured Posts (left) + Sticky Sidebar (right) — desktop only */}
+        {/* Use flex-row to match article page pattern exactly */}
+        <div className="mb-12 hidden lg:flex lg:flex-row gap-8">
+          <div className="flex-1 min-w-0">
             <FeaturedPosts articles={featured.slice(0, 20)} />
           </div>
-          <aside className="lg:col-span-4">
-            <div className="lg:sticky lg:top-24 flex flex-col gap-6">
-              <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 p-6">
-                <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-4">Iklan</h3>
-                <div className="flex flex-col gap-4">
-                  <AdSlot position="FEED_ASIDE_TOP" />
-                  <AdSlot position="FEED_ASIDE_MID" />
-                  <AdSlot position="FEED_ASIDE_BOTTOM" />
-                </div>
-              </div>
+
+          {/* Exact same pattern as article page aside */}
+          <aside className="w-[32%] shrink-0 flex flex-col justify-end">
+            <div className="lg:sticky lg:bottom-0 flex flex-col gap-6 pb-8">
+              <SidebarAds />
             </div>
           </aside>
         </div>
 
+        {/* Ad after feed — full width */}
         <div className="mb-12">
           <AdSlot position="FEED_AFTER_SELESAI" className="mb-8" />
+          <AdSlot position="MOBILE_FEED_AFTER" className="mb-8" />
         </div>
 
         {/* Featured Briefs Section */}

@@ -29,26 +29,35 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, type, location, imageUrl, linkUrl, scriptCode, status, startDate, endDate, ratio } = body;
 
-    if (!title || !location) {
+        if (!title || !location) {
       return NextResponse.json({ error: "Title and Location are required" }, { status: 400 });
     }
 
-    const ad = await db.ad.create({
-      data: {
-        title,
-        type: type || "IMAGE_BANNER",
-        location,
-        imageUrl: imageUrl || null,
-        linkUrl: linkUrl || null,
-        scriptCode: scriptCode || null,
-        status: typeof status === "boolean" ? status : true,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
-        ratio: ratio || "1:1",
-      },
-    });
+    const locations = Array.isArray(location) ? location : [location];
+    if (locations.length === 0) {
+      return NextResponse.json({ error: "At least one Location is required" }, { status: 400 });
+    }
 
-    return NextResponse.json(ad);
+    const createdAds = [];
+    for (const loc of locations) {
+      const ad = await db.ad.create({
+        data: {
+          title,
+          type: type || "IMAGE_BANNER",
+          location: loc,
+          imageUrl: imageUrl || null,
+          linkUrl: linkUrl || null,
+          scriptCode: scriptCode || null,
+          status: typeof status === "boolean" ? status : true,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
+          ratio: ratio || "1:1",
+        },
+      });
+      createdAds.push(ad);
+    }
+
+    return NextResponse.json(createdAds[0]);
   } catch (error) {
     console.error("Ad creation error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

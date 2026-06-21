@@ -6,43 +6,63 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Image as ImageIcon, Code, Calendar, Upload, X, Loader2, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
-const PLACEMENT_SECTIONS = [
+const DESKTOP_PLACEMENTS = [
   {
-    title: "Desktop",
-    subsections: [
-      {
-        title: "Header / Kepala Halaman",
-        options: [
-          { value: "HEADER_BETWEEN", label: "Bawah Header (Beranda & Kategori)", sublabel: "Rasio Aspek 6:1" },
-          { value: "MAIN_BELOW_HEADLINE", label: "Di Bawah Headline / Hero Utama (Beranda)", sublabel: "Tinggi Tetap 12rem" },
-          { value: "POPULAR_BELOW", label: "Di Bawah Widget Populer (Beranda)", sublabel: "Tinggi Tetap 12rem" },
-        ]
-      },
-      {
-        title: "Feed Terkini (Sisipan Berita)",
-        options: [
-          { value: "FEED_INLINE_1", label: "Feed Sisipan Banner 1 (Beranda)", sublabel: "Rasio Aspek 6:1" },
-          { value: "FEED_INLINE_2", label: "Feed Sisipan Card 2 (Beranda)", sublabel: "Rasio Aspek 4:3" },
-          { value: "FEED_AFTER_SELESAI", label: "Bawah Feed Terkini / Selesai (Beranda)", sublabel: "Rasio Aspek 6:1" },
-        ]
-      },
-      {
-        title: "Sidebar / Kolom Samping",
-        options: [
-          { value: "FEED_ASIDE_TOP", label: "Sidebar Feed - Atas (Beranda)", sublabel: "Rasio Aspek 4:5" },
-          { value: "FEED_ASIDE_MID", label: "Sidebar Feed - Tengah (Beranda)", sublabel: "Rasio Aspek 4:5" },
-          { value: "FEED_ASIDE_BOTTOM", label: "Sidebar Feed - Bawah (Beranda)", sublabel: "Rasio Aspek 4:5" },
-        ]
-      },
-      {
-        title: "Dalam Artikel",
-        options: [
-          { value: "ARTICLE_ABOVE_TITLE", label: "Atas Judul Artikel (Halaman Artikel)", sublabel: "Rasio Aspek 6:1" },
-          { value: "ARTICLE_BELOW_IMAGE", label: "Bawah Gambar Utama (Halaman Artikel)", sublabel: "Rasio Aspek 16:9" },
-          { value: "ARTICLE_IN_CONTENT", label: "Di Dalam Konten / Isi (Halaman Artikel)", sublabel: "Rasio Aspek 16:9" },
-          { value: "ARTICLE_END", label: "Bawah / Akhir Artikel (Halaman Artikel)", sublabel: "Rasio Aspek 16:9" },
-        ]
-      }
+    title: "Header / Kepala Halaman",
+    options: [
+      { value: "HEADER_BETWEEN", label: "Bawah Header (Beranda & Kategori)", sublabel: "1200×200px (Rasio 6:1)" },
+      { value: "MAIN_BELOW_HEADLINE", label: "Di Bawah Headline / Hero Utama (Beranda)", sublabel: "1200×192px (Tinggi Tetap 12rem)" },
+      { value: "POPULAR_BELOW", label: "Di Bawah Widget Populer (Beranda)", sublabel: "1200×192px (Tinggi Tetap 12rem)" },
+    ]
+  },
+  {
+    title: "Feed Terkini (Sisipan Berita)",
+    options: [
+      { value: "FEED_INLINE_1", label: "Feed Sisipan Banner 1 (Beranda)", sublabel: "1200×200px (Rasio 6:1)" },
+      { value: "FEED_INLINE_2", label: "Feed Sisipan Card 2 (Beranda)", sublabel: "400×300px (Rasio 4:3)" },
+      { value: "FEED_AFTER_SELESAI", label: "Bawah Feed Terkini / Selesai (Beranda)", sublabel: "1200×200px (Rasio 6:1)" },
+    ]
+  },
+  {
+    title: "Sidebar / Kolom Samping",
+    options: [
+      { value: "FEED_ASIDE_TOP", label: "Sidebar Feed - Atas (Beranda)", sublabel: "400×500px (Rasio 4:5)" },
+      { value: "FEED_ASIDE_MID", label: "Sidebar Feed - Tengah (Beranda)", sublabel: "400×500px (Rasio 4:5)" },
+      { value: "FEED_ASIDE_BOTTOM", label: "Sidebar Feed - Bawah (Beranda)", sublabel: "400×500px (Rasio 4:5)" },
+    ]
+  },
+  {
+    title: "Dalam Artikel",
+    options: [
+      { value: "ARTICLE_ABOVE_TITLE", label: "Atas Judul Artikel (Halaman Artikel)", sublabel: "1200×200px (Rasio 6:1)" },
+      { value: "ARTICLE_BELOW_IMAGE", label: "Bawah Gambar Utama (Halaman Artikel)", sublabel: "1200×675px (Rasio 16:9)" },
+      { value: "ARTICLE_IN_CONTENT", label: "Di Dalam Konten / Isi (Halaman Artikel)", sublabel: "1200×675px (Rasio 16:9)" },
+      { value: "ARTICLE_END", label: "Bawah / Akhir Artikel (Halaman Artikel)", sublabel: "1200×675px (Rasio 16:9)" },
+    ]
+  }
+];
+
+const MOBILE_PLACEMENTS = [
+  {
+    title: "Header / Kepala Halaman",
+    options: [
+      { value: "MOBILE_HEADER", label: "Bawah Header / Banner Atas (Beranda & Kategori)", sublabel: "720×120px (Rasio 6:1)" },
+    ]
+  },
+  {
+    title: "Feed Terkini (Sisipan Berita)",
+    options: [
+      { value: "MOBILE_FEED_1", label: "Feed Sisipan Banner 1 (Beranda)", sublabel: "400×300px (Rasio 4:3)" },
+      { value: "MOBILE_FEED_2", label: "Feed Sisipan Card 2 (Beranda)", sublabel: "400×300px (Rasio 4:3)" },
+      { value: "MOBILE_FEED_AFTER", label: "Antara Widget (Semua Halaman)", sublabel: "Rasio Aspek 4:3" },
+    ]
+  },
+  {
+    title: "Dalam Artikel",
+    options: [
+      { value: "MOBILE_ARTICLE_ABOVE", label: "Atas Judul Artikel (Halaman Artikel)", sublabel: "720×120px (Rasio 6:1)" },
+      { value: "MOBILE_ARTICLE_MIDDLE", label: "Di Dalam Konten / Isi (Halaman Artikel)", sublabel: "400×300px (Rasio 4:3)" },
+      { value: "MOBILE_ARTICLE_END", label: "Bawah / Akhir Artikel (Halaman Artikel)", sublabel: "400×300px (Rasio 4:3)" },
     ]
   }
 ];
@@ -53,10 +73,11 @@ export default function NewAdPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
+  const [activeAdTab, setActiveAdTab] = useState<"desktop" | "mobile">("desktop");
   const [formData, setFormData] = useState({
     title: "",
     type: "IMAGE_BANNER",
-    location: "HEADER_BETWEEN",
+    location: ["HEADER_BETWEEN"] as string[],
     imageUrl: "",
     linkUrl: "",
     scriptCode: "",
@@ -64,6 +85,17 @@ export default function NewAdPage() {
     startDate: "",
     endDate: "",
   });
+
+  const toggleLocation = (loc: string) => {
+    setFormData((prev) => {
+      const current = prev.location;
+      if (current.includes(loc)) {
+        return { ...prev, location: current.filter((x) => x !== loc) };
+      } else {
+        return { ...prev, location: [...current, loc] };
+      }
+    });
+  };
 
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [mediaLibrary, setMediaLibrary] = useState<any[]>([]);
@@ -126,6 +158,12 @@ export default function NewAdPage() {
     e.preventDefault();
     setLoading(true);
 
+    if (formData.location.length === 0) {
+      showToast("Pilih setidaknya satu posisi penempatan.", "error");
+      setLoading(false);
+      return;
+    }
+
     if (formData.type === "IMAGE_BANNER" && !formData.imageUrl) {
       showToast("Gambar banner wajib ditentukan untuk tipe Banner.", "error");
       setLoading(false);
@@ -169,7 +207,7 @@ export default function NewAdPage() {
       <div className="flex items-center gap-3 select-none">
         <Link
           href="/admin/ads"
-          className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-650 dark:text-zinc-450 hover:text-zinc-800 dark:hover:text-zinc-200 rounded-xl transition-all cursor-pointer"
+          className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 rounded-xl transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
@@ -338,66 +376,78 @@ export default function NewAdPage() {
               </div>
             )}
 
-            {/* Posisi Iklan (SINGLE COLUMN WITH SECTIONS) */}
+            {/* Posisi Iklan (TAB VERSION) */}
             <div>
               <label className="block text-[10px] font-bold text-zinc-550 dark:text-zinc-400 uppercase tracking-wider mb-3">
                 Posisi Penempatan <span className="text-red-500">*</span>
               </label>
 
-              {PLACEMENT_SECTIONS.map((section) => (
-                <div key={section.title} className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-zinc-150 dark:border-zinc-900 pb-1.5 mt-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-teal-650 dark:text-teal-400 select-none">
-                      {section.title}
+              {/* Tab Selector */}
+              <div className="flex border-b border-zinc-200 dark:border-zinc-800 mb-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveAdTab("desktop")}
+                  className={`px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeAdTab === "desktop"
+                    ? "border-teal-500 text-teal-600 dark:text-teal-400"
+                    : "border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-300"
+                    }`}
+                >
+                  Desktop ({formData.location.filter((loc) => !loc.startsWith("MOBILE_")).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveAdTab("mobile")}
+                  className={`px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeAdTab === "mobile"
+                    ? "border-teal-500 text-teal-600 dark:text-teal-400"
+                    : "border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-300"
+                    }`}
+                >
+                  Mobile ({formData.location.filter((loc) => loc.startsWith("MOBILE_")).length})
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {(activeAdTab === "desktop" ? DESKTOP_PLACEMENTS : MOBILE_PLACEMENTS).map((sub) => (
+                  <div key={sub.title} className="space-y-2">
+                    <span className="block text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 pb-1 mt-3 select-none">
+                      {sub.title}
                     </span>
-                  </div>
 
-                  <div className="space-y-6 pl-1">
-                    {section.subsections.map((sub) => (
-                      <div key={sub.title} className="space-y-2">
-                        <span className="block text-[11px] font-extrabold text-zinc-600 dark:text-zinc-400 select-none">
-                          {sub.title}
-                        </span>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          {sub.options.map((opt) => {
-                            const isSelected = formData.location === opt.value;
-                            return (
-                              <div
-                                key={opt.value}
-                                onClick={() => setFormData((prev) => ({ ...prev, location: opt.value }))}
-                                className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer select-none transition-all ${
-                                  isSelected
-                                    ? "border-teal-500 bg-teal-500/5"
-                                    : "border-zinc-200 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-850"
-                                }`}
-                              >
-                                <div className="flex items-center h-5 mt-0.5">
-                                  <input
-                                    type="radio"
-                                    name="location"
-                                    checked={isSelected}
-                                    onChange={() => {}}
-                                    className="w-4 h-4 text-teal-600 border-zinc-300 focus:ring-teal-500 accent-teal-650 cursor-pointer"
-                                  />
-                                </div>
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-250 leading-snug">
-                                    {opt.label}
-                                  </span>
-                                  <span className="text-[10px] text-zinc-450 mt-0.5">
-                                    {opt.sublabel} ({opt.value})
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {sub.options.map((opt) => {
+                        const isSelected = formData.location.includes(opt.value);
+                        return (
+                          <div
+                            key={opt.value}
+                            onClick={() => toggleLocation(opt.value)}
+                            className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer select-none transition-all ${isSelected
+                              ? "border-teal-500 bg-teal-500/5"
+                              : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700"
+                              }`}
+                          >
+                            <div className="flex items-center h-5 mt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => { }}
+                                className="w-4 h-4 text-teal-600 border-zinc-300 rounded focus:ring-teal-500 accent-teal-600 cursor-pointer"
+                              />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 leading-snug">
+                                {opt.label}
+                              </span>
+                              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                {opt.sublabel} ({opt.value})
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -421,7 +471,7 @@ export default function NewAdPage() {
                     type="radio"
                     checked={formData.status === true}
                     onChange={() => setFormData((prev) => ({ ...prev, status: true }))}
-                    className="accent-teal-650"
+                    className="accent-teal-600"
                   />
                   Tampilkan (Aktif)
                 </label>
@@ -430,7 +480,7 @@ export default function NewAdPage() {
                     type="radio"
                     checked={formData.status === false}
                     onChange={() => setFormData((prev) => ({ ...prev, status: false }))}
-                    className="accent-teal-650"
+                    className="accent-teal-600"
                   />
                   Sembunyikan
                 </label>
@@ -476,7 +526,7 @@ export default function NewAdPage() {
           <button
             type="submit"
             disabled={loading || isUploading}
-            className="w-full inline-flex items-center justify-center gap-2 bg-teal-650 hover:bg-teal-600 disabled:bg-teal-700/60 text-white font-bold text-xs uppercase px-5 py-3.5 rounded-xl shadow-lg shadow-teal-500/10 transition-all cursor-pointer"
+            className="w-full inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-700/60 text-white font-bold text-xs uppercase px-5 py-3.5 rounded-xl shadow-lg shadow-teal-500/10 transition-all cursor-pointer"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -522,11 +572,10 @@ export default function NewAdPage() {
                       <div
                         key={item.id}
                         onClick={() => selectImageFromMedia(item.url)}
-                        className={`group relative aspect-square rounded-lg overflow-hidden bg-zinc-50 dark:bg-zinc-900 cursor-pointer border-2 transition-all ${
-                          isSelected
-                            ? "border-teal-500 ring-2 ring-teal-500/20"
-                            : "border-transparent hover:border-zinc-350 dark:hover:border-zinc-700"
-                        }`}
+                        className={`group relative aspect-square rounded-lg overflow-hidden bg-zinc-50 dark:bg-zinc-900 cursor-pointer border-2 transition-all ${isSelected
+                          ? "border-teal-500 ring-2 ring-teal-500/20"
+                          : "border-transparent hover:border-zinc-350 dark:hover:border-zinc-700"
+                          }`}
                       >
                         <img
                           src={item.url}
@@ -535,7 +584,7 @@ export default function NewAdPage() {
                         />
                         {isSelected && (
                           <div className="absolute inset-0 bg-teal-500/10 flex items-center justify-center">
-                            <span className="bg-teal-650 text-white rounded-full p-1 text-[10px] font-bold">
+                            <span className="bg-teal-600 text-white rounded-full p-1 text-[10px] font-bold">
                               ✓
                             </span>
                           </div>

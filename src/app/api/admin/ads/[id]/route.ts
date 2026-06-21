@@ -34,16 +34,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json();
     const { title, type, location, imageUrl, linkUrl, scriptCode, status, startDate, endDate, ratio } = body;
 
-    if (!title || !location) {
+        if (!title || !location) {
       return NextResponse.json({ error: "Title and Location are required" }, { status: 400 });
     }
+
+    const locations = Array.isArray(location) ? location : [location];
+    if (locations.length === 0) {
+      return NextResponse.json({ error: "At least one Location is required" }, { status: 400 });
+    }
+
+    const firstLoc = locations[0];
+    const otherLocs = locations.slice(1);
 
     const updatedAd = await db.ad.update({
       where: { id },
       data: {
         title,
         type: type || "IMAGE_BANNER",
-        location,
+        location: firstLoc,
         imageUrl: imageUrl || null,
         linkUrl: linkUrl || null,
         scriptCode: scriptCode || null,
@@ -53,6 +61,23 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         ratio: ratio || "1:1",
       },
     });
+
+    for (const loc of otherLocs) {
+      await db.ad.create({
+        data: {
+          title,
+          type: type || "IMAGE_BANNER",
+          location: loc,
+          imageUrl: imageUrl || null,
+          linkUrl: linkUrl || null,
+          scriptCode: scriptCode || null,
+          status: typeof status === "boolean" ? status : true,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
+          ratio: ratio || "1:1",
+        },
+      });
+    }
 
     return NextResponse.json(updatedAd);
   } catch (error) {

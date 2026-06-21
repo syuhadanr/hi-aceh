@@ -6,6 +6,7 @@ import TopBar from "@/components/layout/TopBar";
 import TrendingNow from "@/components/home/TrendingNow";
 import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from "@/components/layout/Footer";
+import AdSlot, { SidebarAds } from "@/components/ads/AdSlot";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -115,12 +116,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                             {article.author}
                           </span>
                           <Link href={`/article/${article.slug}`}>
-                            <h2 className="font-bold text-xl sm:text-2xl leading-snug group-hover:text-primary text-zinc-900 dark:text-white line-clamp-2 transition-colors">
+                            <h2 className="font-bold text-xl sm:text-2xl leading-snug group-hover:text-primary text-zinc-900 dark:text-white transition-colors">
                               {article.title}
                             </h2>
                           </Link>
                           {article.excerpt ? (
-                            <p className="text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1">
+                            <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
                               {article.excerpt}
                             </p>
                           ) : null}
@@ -220,6 +221,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             <div className="lg:sticky lg:bottom-0 flex flex-col gap-8 pb-8">
               <TrendingNow articles={trending} />
 
+              {/* Sidebar Ad Slots */}
+              <SidebarAds />
+
+              {/* Mobile Ad between Trending and Berita Terbaru */}
+              <AdSlot position="MOBILE_FEED_AFTER" className="my-4" />
+
               {/* Berita Terbaru */}
               <div className="bg-white dark:bg-zinc-950">
                 <h3 className="flex items-center gap-2 text-lg font-bold uppercase border-l-4 border-brand-green pl-3 mb-6 font-display text-gray-900 dark:text-white">
@@ -230,11 +237,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     <Link key={a.id} href={`/article/${a.slug}`} className="flex gap-4 group">
                       <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                         <Image src={a.image} alt={a.title} fill className="object-cover" />
-                        <div className="absolute top-0 left-0 bg-brand-green text-white text-[10px] font-bold px-1.5 py-0.5">{idx + 1}</div>
                       </div>
                       <div className="flex flex-col justify-between py-0.5">
                         <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">{a.category}</span>
-                        <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans line-clamp-2">{a.title}</h4>
+                        <h4 className="font-bold text-sm leading-snug text-gray-900 dark:text-white group-hover:text-brand-green transition-colors font-sans">{a.title}</h4>
                         <span className="text-[10px] text-gray-400 font-sans">{a.publishedAt}</span>
                       </div>
                     </Link>

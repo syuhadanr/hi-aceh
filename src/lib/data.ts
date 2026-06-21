@@ -51,7 +51,7 @@ export function mapPrismaArticle(article: any) {
     ? new Date(article.publishedAt).toLocaleDateString("en-US", dateOptions)
     : "";
 
- let imageUrl = "/fallback.jpeg";
+  let imageUrl = "/fallback.jpeg";
   if (article.featuredImage?.url) {
     imageUrl = article.featuredImage.url;
   } else if (article.type === "VIDEO" && article.videoUrl) {
@@ -134,8 +134,15 @@ export async function getArticlesByCategory(categorySlug: string) {
 }
 
 export async function getTrendingArticles() {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
   const articles = await db.article.findMany({
-    where: { status: "PUBLISHED", deletedAt: null },
+    where: {
+      status: "PUBLISHED",
+      deletedAt: null,
+      publishedAt: { gte: sevenDaysAgo },
+    },
     orderBy: { viewCount: "desc" },
     take: 6,
     include: { author: true, category: true, tags: true, featuredImage: true },

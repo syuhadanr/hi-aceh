@@ -10,7 +10,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Location is required" }, { status: 400 });
     }
 
-    const ad = await db.ad.findFirst({
+    const ads = await db.ad.findMany({
       where: {
         location: location as any,
         status: true,
@@ -24,17 +24,19 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" }
     });
 
-    if (ad) {
+    if (ads.length > 0) {
       // Async update impressions (fire and forget)
-      db.ad.update({
-        where: { id: ad.id },
+      const adIds = ads.map(ad => ad.id);
+      db.ad.updateMany({
+        where: { id: { in: adIds } },
         data: { impressions: { increment: 1 } }
       }).catch(console.error);
     }
 
-    return NextResponse.json(ad || null);
+    return NextResponse.json(ads);
   } catch (error: any) {
     console.error("GET /api/ads error:", error);
-    return NextResponse.json({ error: "Failed to fetch ad" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch ads" }, { status: 500 });
   }
 }
+

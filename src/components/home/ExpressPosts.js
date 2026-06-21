@@ -11,7 +11,7 @@ export default function ExpressPosts({ categories }) {
 
     return (
         <div className="mb-12">
-            <SectionHeader title="Kategori Berita" />
+            <SectionHeader title="Rubrik Pilihan" />
 
             <div className="flex flex-col gap-6 mt-6 md:hidden">
                 {gridItems.map((category) => (
@@ -36,7 +36,7 @@ export default function ExpressPosts({ categories }) {
                                         <Image src={article.image} alt={article.title} fill className="object-cover" />
                                     </div>
                                     <div className="flex flex-col justify-between py-0.5 min-w-0">
-                                        <h4 className="font-bold text-sm leading-snug text-zinc-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
+                                        <h4 className="font-bold text-sm leading-snug text-zinc-900 dark:text-white group-hover:text-primary transition-colors">
                                             {article.title}
                                         </h4>
                                         <span className="text-[10px] text-zinc-400">{article.publishedAt}</span>
@@ -71,7 +71,7 @@ export default function ExpressPosts({ categories }) {
                                     />
                                 </div>
                                 <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                                    <p className="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                                    <p className="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-primary transition-colors leading-snug">
                                         {category.articles[0].title}
                                     </p>
                                     <span className="text-[11px] text-zinc-450 mt-1 block">
@@ -84,7 +84,7 @@ export default function ExpressPosts({ categories }) {
                         <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800 flex-1">
                             {category.articles.slice(1).map((article) => (
                                 <Link key={article.slug} href={`/article/${article.slug}`} className="group px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                                    <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                                    <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-primary transition-colors leading-snug">
                                         {article.title}
                                     </p>
                                     <span className="text-[11px] text-zinc-450 mt-1 block">

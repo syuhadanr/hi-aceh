@@ -349,7 +349,7 @@ const fetchSettingsAndReconcile = async () => {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2.5 text-xs font-bold transition-colors border-b-2 cursor-pointer ${
               activeTab === tab.id
-                ? "border-teal-500 text-teal-650 dark:text-teal-400"
+                ? "border-teal-500 text-teal-600 dark:text-teal-400"
                 : "border-transparent text-zinc-500 hover:text-zinc-850 dark:hover:text-zinc-350"
             }`}
           >
@@ -944,7 +944,7 @@ const fetchSettingsAndReconcile = async () => {
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
                       {idx < 8 && cat.visible && (
-                        <span className="text-[8px] font-bold bg-teal-500/10 text-teal-650 dark:text-teal-400 border border-teal-500/20 px-1 rounded ml-1">
+                        <span className="text-[8px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 px-1 rounded ml-1">
                           Navbar Utama
                         </span>
                       )}
@@ -1073,12 +1073,12 @@ const fetchSettingsAndReconcile = async () => {
                         const isChecked = settings.footerShowCategories.some((c) => c.slug === cat.slug);
                         return (
                           <label key={cat.slug} className="flex items-center gap-2 cursor-pointer text-xs text-zinc-700 dark:text-zinc-350 select-none">
-                            <input
+                              <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={() => handleToggleCategory(cat)}
                               disabled={!isAuthorized}
-                              className="rounded text-teal-650 focus:ring-teal-500 border-zinc-350 w-4 h-4 cursor-pointer"
+                              className="rounded text-teal-600 focus:ring-teal-500 border-zinc-350 w-4 h-4 cursor-pointer"
                             />
                             <span>{cat.name}</span>
                           </label>
@@ -1103,7 +1103,7 @@ const fetchSettingsAndReconcile = async () => {
                             checked={isChecked}
                             onChange={() => handleTogglePage(page.key)}
                             disabled={!isAuthorized}
-                            className="rounded text-teal-650 focus:ring-teal-500 border-zinc-355 w-4 h-4 cursor-pointer"
+                            className="rounded text-teal-600 focus:ring-teal-500 border-zinc-355 w-4 h-4 cursor-pointer"
                           />
                           <span>{page.label}</span>
                         </label>

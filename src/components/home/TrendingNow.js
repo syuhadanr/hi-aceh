@@ -4,7 +4,7 @@ export default function TrendingNow({ articles }) {
     if (!articles) return null;
 
     return (
-        <div className="bg-white dark:bg-surface-dark border dark:border-gray-800 rounded-lg p-4 h-auto lg:h-[620px] flex flex-col">
+        <div className="bg-white dark:bg-surface-dark border dark:border-gray-800 rounded-lg p-4 flex flex-col">
             <h3 className="section-title text-xl font-display font-bold text-gray-900 dark:text-white border-b-2 border-brand-green pb-2 mb-4">
                 TRENDING NOW
             </h3>
@@ -18,7 +18,7 @@ export default function TrendingNow({ articles }) {
                             <span className="text-xs font-bold text-gray-400 uppercase mb-1 block">
                                 {item.category}
                             </span>
-                            <h4 className="font-bold line-clamp-2 text-sm leading-snug group-hover:text-primary transition-colors text-gray-900 dark:text-white">
+                            <h4 className="font-bold text-sm leading-snug group-hover:text-primary transition-colors text-gray-900 dark:text-white">
                                 {item.title}
                             </h4>
                         </div>

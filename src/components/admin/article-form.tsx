@@ -310,7 +310,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
           onClick={() => setType(t.value)}
           className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
             type === t.value
-              ? "border-teal-500/30 bg-teal-500/5 text-teal-650 dark:text-teal-400"
+              ? "border-teal-500/30 bg-teal-500/5 text-teal-600 dark:text-teal-400"
               : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900"
           }`}
         >
@@ -616,7 +616,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
                 Jadwal Tayang
               </label>
               {!publishedAt && (
-                <span className="text-[9px] font-bold bg-teal-500/10 text-teal-650 dark:text-teal-400 px-1.5 py-0.5 rounded border border-teal-500/20">
+                <span className="text-[9px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded border border-teal-500/20">
                   Sekarang (Otomatis)
                 </span>
               )}

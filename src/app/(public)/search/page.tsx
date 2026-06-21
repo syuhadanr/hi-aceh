@@ -4,6 +4,7 @@ import HeaderNav from '@/components/layout/HeaderNav';
 import Footer from '@/components/layout/Footer';
 import Image from 'next/image';
 import Link from 'next/link';
+import AdSlot, { SidebarAds } from '@/components/ads/AdSlot';
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; sort?: string; category?: string; date?: string; page?: string }>;
@@ -185,6 +186,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   ))}
                 </ul>
               </div>
+
+              {/* Sidebar Ad Slots */}
+              <SidebarAds />
+
+              {/* Mobile Ad below Sidebar Ad Slots */}
+              <AdSlot position="MOBILE_FEED_AFTER" className="my-4" />
             </div>
           </aside>
 
