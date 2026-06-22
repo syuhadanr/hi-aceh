@@ -35,10 +35,7 @@ export default function FeaturedPosts({ articles }) {
                     </a>
                 ))}
 
-                <div className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
-                    <AdSlot position="MOBILE_FEED_1" />
-                </div>
+                <AdSlot position="MOBILE_FEED_1" />
 
                 {mobileList.slice(3).map((post, idx) => (
                     <React.Fragment key={post.id}>
@@ -53,10 +50,7 @@ export default function FeaturedPosts({ articles }) {
                             </div>
                         </a>
                         {idx === 2 && mobileList.length > 6 && (
-                            <div className="bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl px-5 py-4 shadow-sm">
-                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-zinc-400 block mb-2">Sponsor</span>
-                                <AdSlot position="MOBILE_FEED_2" />
-                            </div>
+                            <AdSlot position="MOBILE_FEED_2" />
                         )}
                     </React.Fragment>
                 ))}

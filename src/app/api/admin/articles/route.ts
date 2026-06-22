@@ -4,17 +4,17 @@ import { auth } from "src/auth";
 
 async function resolveTagIds(tagNames: string[]): Promise<string[]> {
   if (!tagNames || tagNames.length === 0) return [];
-  
+
   const ids: string[] = [];
   for (const name of tagNames) {
     const cleanName = name.trim();
     if (!cleanName) continue;
-    
+
     const slug = cleanName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
-      
+
     // Find or create tag
     let tag = await db.tag.findFirst({
       where: {
@@ -24,7 +24,7 @@ async function resolveTagIds(tagNames: string[]): Promise<string[]> {
         ]
       }
     });
-    
+
     if (!tag) {
       tag = await db.tag.create({
         data: { name: cleanName, slug }
@@ -100,7 +100,17 @@ export async function GET(req: NextRequest) {
           tags: { select: { id: true, name: true, slug: true } },
           featuredImage: { select: { id: true, url: true, filename: true } },
         },
-        orderBy: { updatedAt: "desc" },
+        orderBy: (() => {
+          const sortParam = searchParams.get("sort") || "publishedAt_desc";
+          const sortMap: Record<string, any> = {
+            publishedAt_desc: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+            updatedAt_desc: { updatedAt: "desc" },
+            createdAt_desc: { createdAt: "desc" },
+            viewCount_desc: { viewCount: "desc" },
+            title_asc: { title: "asc" },
+          };
+          return sortMap[sortParam] ?? sortMap.publishedAt_desc;
+        })(),
         skip,
         take: limit,
       }),

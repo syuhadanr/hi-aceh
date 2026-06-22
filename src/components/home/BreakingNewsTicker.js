@@ -33,7 +33,7 @@ export default function BreakingNewsTicker({ items }) {
                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-50 dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
                 </div>
-                <div className="flex items-center border-l border-gray-200 dark:border-zinc-700 h-10 px-2 bg-white dark:bg-zinc-900">
+                <div className="hidden md:flex items-center border-l border-gray-200 dark:border-zinc-700 h-10 px-2 bg-white dark:bg-zinc-900">
                     <button className="p-1 text-gray-400 hover:text-brand-green transition-colors">
                         <i className="material-icons text-sm">chevron_left</i>
                     </button>

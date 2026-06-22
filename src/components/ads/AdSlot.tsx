@@ -116,11 +116,7 @@ export default function AdSlot({
   const isMobileSlot = pos.startsWith("MOBILE_");
   const responsiveClass = isMobileSlot ? "flex md:hidden" : "hidden md:flex";
 
-  if (loading) {
-    return (
-      <div className={`${responsiveClass} items-center justify-center ${skeletonClass} animate-pulse bg-zinc-100 dark:bg-zinc-900 rounded-md ${className}`} />
-    );
-  }
+  if (loading) return null;
 
   if (ads.length > 0) {
     return (
