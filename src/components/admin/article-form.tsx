@@ -55,6 +55,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
 
   const { data: session } = useSession();
   const role = session?.user?.role || "PENULIS";
+  const isPenulis = role === "PENULIS";
 
   // Form state
   const [title, setTitle] = useState("");
@@ -238,7 +239,8 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
   const handleSave = async (saveStatus?: string) => {
     setIsSaving(true);
 
-    const finalStatus = saveStatus || status;
+    const finalStatus =
+      isPenulis && saveStatus === "PUBLISHED" ? "PENDING" : saveStatus || status;
 
     const payload = {
       id: articleId,
@@ -274,7 +276,9 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
         showToast(data.error || "Terjadi kesalahan saat menyimpan.", "error");
       } else {
         showToast(
-          finalStatus === "PUBLISHED"
+          finalStatus === "PENDING"
+            ? "Artikel dikirim ke editor/admin untuk persetujuan sebelum terbit."
+            : finalStatus === "PUBLISHED"
             ? "Artikel berhasil dipublikasikan!"
             : "Artikel berhasil disimpan sebagai draft.",
           "success"
@@ -290,6 +294,16 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handlePublishClick = () => {
+    if (isPenulis) {
+      showToast(
+        "Artikel Penulis tidak langsung terbit. Artikel ini akan masuk tab Menunggu untuk disetujui Admin/Editor.",
+        "info"
+      );
+    }
+    handleSave("PUBLISHED");
   };
 
   const filteredTags = tags.filter((t) =>
@@ -364,12 +378,12 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
               Simpan Draft
             </button>
             <button
-              onClick={() => handleSave("PUBLISHED")}
+              onClick={handlePublishClick}
               disabled={isSaving || !title || !content || !categoryId}
               className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              {isSaving ? "Menyimpan..." : "Publikasikan"}
+              {isSaving ? "Menyimpan..." : isPenulis ? "Ajukan Publikasi" : "Publikasikan"}
             </button>
           </div>
         </div>
@@ -404,12 +418,12 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
               Simpan Draft
             </button>
             <button
-              onClick={() => handleSave("PUBLISHED")}
+              onClick={handlePublishClick}
               disabled={isSaving || !title || !content || !categoryId}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              {isSaving ? "Menyimpan..." : "Publikasikan"}
+              {isSaving ? "Menyimpan..." : isPenulis ? "Ajukan Publikasi" : "Publikasikan"}
             </button>
           </div>
         </div>
@@ -646,7 +660,9 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
               </button>
             ) : (
               <p className="text-[10px] text-zinc-450 dark:text-zinc-550 mt-1.5">
-                Biarkan kosong agar terbit secara instan saat tombol Publikasikan ditekan.
+                {isPenulis
+                  ? "Artikel akan masuk persetujuan Admin/Editor saat tombol Ajukan Publikasi ditekan."
+                  : "Biarkan kosong agar terbit secara instan saat tombol Publikasikan ditekan."}
               </p>
             )}
           </div>
@@ -817,10 +833,10 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
           </div>
 
           {/* Preview Link (when editing) */}
-          {isEditing && (
+          {/* {isEditing && (
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
               <a
-                href={`/${generatedSlug}`}
+               href={`/article/${generatedSlug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-650 dark:text-zinc-300 transition-colors"
@@ -829,7 +845,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
                 Preview Artikel di Frontend
               </a>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useToast } from "@/components/ui/Toast";
 import {
   FileText,
   Plus,
@@ -67,7 +68,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function ArticlesPage() {
   const { data: session } = useSession();
-  const role = (session?.user as any)?.role || "PENULIS";
+  const { showToast } = useToast();
+  const role = session?.user?.role || "PENULIS";
+  const isPenulis = role === "PENULIS";
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
@@ -78,6 +81,11 @@ export default function ArticlesPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [approvalAction, setApprovalAction] = useState<{
+    id: string;
+    title: string;
+    status: "PUBLISHED" | "DRAFT";
+  } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchArticles = useCallback(async (page = 1) => {
@@ -110,9 +118,22 @@ export default function ArticlesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: newStatus }),
       });
-      if (res.ok) fetchArticles(pagination.page);
+      if (res.ok) {
+        showToast(
+          newStatus === "PUBLISHED"
+            ? "Artikel berhasil disetujui dan diterbitkan."
+            : "Artikel ditolak dan dikembalikan ke draft.",
+          newStatus === "PUBLISHED" ? "success" : "warning"
+        );
+        setApprovalAction(null);
+        fetchArticles(pagination.page);
+      } else {
+        const data = await res.json();
+        showToast(data.error || "Gagal memperbarui status artikel.", "error");
+      }
     } catch (e) {
       console.error(e);
+      showToast("Gagal menghubungi server untuk memperbarui status.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -128,9 +149,17 @@ export default function ArticlesPage() {
     setActionLoading(true);
     try {
       const res = await fetch(`/api/admin/articles?id=${deleteId}`, { method: "DELETE" });
-      if (res.ok) { setIsDeleteOpen(false); fetchArticles(pagination.page); }
+      if (res.ok) {
+        setIsDeleteOpen(false);
+        showToast("Artikel dipindahkan ke sampah.", "success");
+        fetchArticles(pagination.page);
+      } else {
+        const data = await res.json();
+        showToast(data.error || "Gagal menghapus artikel.", "error");
+      }
     } catch (e) {
       console.error(e);
+      showToast("Gagal menghubungi server untuk menghapus artikel.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -180,13 +209,75 @@ export default function ArticlesPage() {
     <th className={`py-3.5 px-4 ${className}`}>
       <button
         onClick={() => handleColumnSort(col)}
-        className={`group inline-flex items-center gap-1.5 uppercase tracking-wider font-bold text-[10px] transition-colors cursor-pointer ${isSortedBy(col) ? "text-teal-600 dark:text-teal-400" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-          }`}
+        className={`group inline-flex items-center gap-1.5 uppercase tracking-wider font-bold text-[10px] transition-colors cursor-pointer ${
+          isSortedBy(col) ? "text-teal-600 dark:text-teal-400" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+        }`}
       >
         {children}
         <SortIcon col={col} />
       </button>
     </th>
+  );
+
+  // Shared action buttons used in both desktop column and mobile inline
+  const ArticleActions = ({ article }: { article: Article }) => (
+    <div className="flex items-center gap-1">
+      {article.status === "PENDING" && (role === "ADMIN" || role === "EDITOR") && (
+        <>
+          <button
+            onClick={() =>
+              setApprovalAction({
+                id: article.id,
+                title: article.title,
+                status: "PUBLISHED",
+              })
+            }
+            className="p-1.5 rounded border border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
+            title="Setujui & Terbitkan"
+          >
+            <Check className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() =>
+              setApprovalAction({
+                id: article.id,
+                title: article.title,
+                status: "DRAFT",
+              })
+            }
+            className="p-1.5 rounded border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+            title="Tolak & Jadikan Draft"
+          >
+            <XIcon className="w-3.5 h-3.5" />
+          </button>
+        </>
+      )}
+      <Link
+        href={`/admin/articles/${article.id}/edit`}
+        className="p-1.5 rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+        title="Edit Artikel"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+      </Link>
+      <a
+        href={`/article/${article.slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-1.5 rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+        title="Lihat di Frontend"
+      >
+        <Eye className="w-3.5 h-3.5" />
+      </a>
+      {!isPenulis && (
+        <button
+          onClick={() => { setDeleteId(article.id); setIsDeleteOpen(true); }}
+          className="p-1.5 rounded border border-zinc-200 dark:border-zinc-800 hover:bg-red-50 dark:hover:bg-red-950/20 text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+          title="Hapus Artikel"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
   );
 
   const activeFilterCount = [statusFilter !== "", sortBy !== "publishedAt_desc"].filter(Boolean).length;
@@ -213,7 +304,6 @@ export default function ArticlesPage() {
 
       {/* ── DESKTOP filter bar ── */}
       <div className="hidden md:flex items-center gap-2 p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-        {/* Search */}
         <div className="relative min-w-[180px] flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
           <input
@@ -224,28 +314,23 @@ export default function ArticlesPage() {
             className="w-full text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 pl-8 pr-3 py-2 text-zinc-900 dark:text-zinc-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors"
           />
         </div>
-
         <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
-
-        {/* Status pills */}
         <div className="flex items-center gap-1">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer whitespace-nowrap ${statusFilter === s
+              className={`px-3 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer whitespace-nowrap ${
+                statusFilter === s
                   ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
                   : "text-zinc-500 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
-                }`}
+              }`}
             >
               {STATUS_LABELS[s]}
             </button>
           ))}
         </div>
-
         <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700 ml-auto" />
-
-        {/* Sort dropdown */}
         <div className="flex items-center gap-1.5">
           <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
           <select
@@ -267,7 +352,6 @@ export default function ArticlesPage() {
 
       {/* ── MOBILE filter bar ── */}
       <div className="flex md:hidden flex-col gap-2">
-        {/* Row 1: Search + filter toggle button */}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
@@ -281,10 +365,11 @@ export default function ArticlesPage() {
           </div>
           <button
             onClick={() => setShowMobileFilters((v) => !v)}
-            className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer shrink-0 ${showMobileFilters || activeFilterCount > 0
+            className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
+              showMobileFilters || activeFilterCount > 0
                 ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20"
                 : "border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900"
-              }`}
+            }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Filter</span>
@@ -295,11 +380,8 @@ export default function ArticlesPage() {
             )}
           </button>
         </div>
-
-        {/* Row 2: collapsible filter panel */}
         {showMobileFilters && (
           <div className="flex flex-col gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60">
-            {/* Status */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Status</p>
               <div className="flex flex-wrap gap-1.5">
@@ -307,18 +389,17 @@ export default function ArticlesPage() {
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className={`px-3 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer ${statusFilter === s
+                    className={`px-3 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer ${
+                      statusFilter === s
                         ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
                         : "text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
-                      }`}
+                    }`}
                   >
                     {STATUS_LABELS[s]}
                   </button>
                 ))}
               </div>
             </div>
-
-            {/* Sort */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Urutkan</p>
               <select
@@ -336,8 +417,6 @@ export default function ArticlesPage() {
                 <option value="title_desc">Judul Z–A</option>
               </select>
             </div>
-
-            {/* Reset */}
             {activeFilterCount > 0 && (
               <button
                 onClick={() => { setStatusFilter(""); setSortBy("publishedAt_desc"); }}
@@ -366,7 +445,8 @@ export default function ArticlesPage() {
                 <SortableTh col="status">Status</SortableTh>
                 <SortableTh col="viewCount" className="text-center hidden sm:table-cell">Views</SortableTh>
                 <SortableTh col="publishedAt">Tanggal</SortableTh>
-                <th className="py-3.5 px-4 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Aksi</th>
+                {/* Aksi header — hidden on mobile since actions move under title */}
+                <th className="py-3.5 px-4 text-right text-[10px] font-bold text-zinc-500 uppercase tracking-wider hidden sm:table-cell">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -375,35 +455,38 @@ export default function ArticlesPage() {
                   <td colSpan={7} className="py-16 text-center text-sm text-zinc-500">
                     <FileText className="w-8 h-8 mx-auto mb-2 text-zinc-300 dark:text-zinc-700" />
                     <p className="font-medium">Belum ada artikel</p>
-                    <p className="text-xs text-zinc-400 mt-1">Klik "Artikel Baru" untuk membuat artikel pertama</p>
+                    <p className="text-xs text-zinc-400 mt-1">Klik &quot;Artikel Baru&quot; untuk membuat artikel pertama</p>
                   </td>
                 </tr>
               ) : (
                 articles.map((article) => (
                   <tr key={article.id} className="text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
 
-                    {/* Artikel */}
+                    {/* Artikel — title wraps to 2 lines, actions below on mobile */}
                     <td className="py-3.5 px-4">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          {article.isBreaking && <Flame className="w-3.5 h-3.5 text-red-500 shrink-0" />}
-                          {article.isFeatured && <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                          <span className="font-semibold text-zinc-800 dark:text-zinc-200 truncate block">
+                        <div className="flex items-start gap-1.5">
+                          {article.isBreaking && <Flame className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />}
+                          {article.isFeatured && <Star className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />}
+                          <span className="font-semibold text-zinc-800 dark:text-zinc-200 line-clamp-2 leading-snug">
                             {article.title}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-[10px] text-zinc-400 font-mono truncate max-w-[160px]">
-                            /{article.slug}
-                          </span>
-                          {article.tags.slice(0, 2).map((tag) => (
-                            <span key={tag.id} className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
-                              #{tag.name}
-                            </span>
-                          ))}
-                          {article.tags.length > 2 && (
-                            <span className="text-[9px] text-zinc-400">+{article.tags.length - 2}</span>
-                          )}
+              {article.tags.length > 0 && (
+  <div className="flex items-center gap-1 mt-1 flex-wrap">
+    {article.tags.slice(0, 2).map((tag) => (
+      <span key={tag.id} className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+        #{tag.name}
+      </span>
+    ))}
+    {article.tags.length > 2 && (
+      <span className="text-[9px] text-zinc-400">+{article.tags.length - 2}</span>
+    )}
+  </div>
+)}
+                        {/* Mobile-only actions under title */}
+                        <div className="mt-2 sm:hidden">
+                          <ArticleActions article={article} />
                         </div>
                       </div>
                     </td>
@@ -445,50 +528,10 @@ export default function ArticlesPage() {
                       </div>
                     </td>
 
-                    {/* Aksi */}
-                    <td className="py-3.5 px-4 text-right">
+                    {/* Aksi — desktop only */}
+                    <td className="py-3.5 px-4 text-right hidden sm:table-cell">
                       <div className="flex items-center justify-end gap-1">
-                        {article.status === "PENDING" && (role === "ADMIN" || role === "EDITOR") && (
-                          <>
-                            <button
-                              onClick={() => handleUpdateStatus(article.id, "PUBLISHED")}
-                              className="p-1.5 rounded border border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
-                              title="Setujui & Terbitkan"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleUpdateStatus(article.id, "DRAFT")}
-                              className="p-1.5 rounded border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
-                              title="Tolak & Jadikan Draft"
-                            >
-                              <XIcon className="w-3.5 h-3.5" />
-                            </button>
-                          </>
-                        )}
-                        <Link
-                          href={`/admin/articles/${article.id}/edit`}
-                          className="p-1.5 rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
-                          title="Edit Artikel"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Link>
-                        <a
-                          href={`/${article.category.slug}/${article.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
-                          title="Lihat di Frontend"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                          onClick={() => { setDeleteId(article.id); setIsDeleteOpen(true); }}
-                          className="p-1.5 rounded border border-zinc-200 dark:border-zinc-800 hover:bg-red-50 dark:hover:bg-red-950/20 text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
-                          title="Hapus Artikel"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <ArticleActions article={article} />
                       </div>
                     </td>
                   </tr>
@@ -527,10 +570,11 @@ export default function ArticlesPage() {
                 <button
                   key={pageNum}
                   onClick={() => fetchArticles(pageNum)}
-                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${pageNum === pagination.page
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    pageNum === pagination.page
                       ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
                       : "border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    }`}
+                  }`}
                 >
                   {pageNum}
                 </button>
@@ -543,6 +587,58 @@ export default function ArticlesPage() {
             >
               <ChevronRight className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Approval Modal */}
+      {approvalAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
+            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2 mb-3">
+              {approvalAction.status === "PUBLISHED" ? (
+                <Check className="w-5 h-5 text-emerald-500" />
+              ) : (
+                <XIcon className="w-5 h-5 text-rose-500" />
+              )}
+              {approvalAction.status === "PUBLISHED"
+                ? "Setujui Artikel?"
+                : "Tolak Artikel?"}
+            </h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2 leading-relaxed">
+              {approvalAction.status === "PUBLISHED"
+                ? "Artikel ini akan diterbitkan dan tampil di frontend setelah Anda menyetujui."
+                : "Artikel ini akan dikembalikan menjadi draft agar dapat diperbaiki kembali."}
+            </p>
+            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 mb-6 line-clamp-2">
+              {approvalAction.title}
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-900">
+              <button
+                onClick={() => setApprovalAction(null)}
+                disabled={actionLoading}
+                className="px-4 py-2 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() =>
+                  handleUpdateStatus(approvalAction.id, approvalAction.status)
+                }
+                disabled={actionLoading}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg disabled:opacity-50 text-white shadow-sm transition-all cursor-pointer ${
+                  approvalAction.status === "PUBLISHED"
+                    ? "bg-emerald-600 hover:bg-emerald-500"
+                    : "bg-rose-600 hover:bg-rose-500"
+                }`}
+              >
+                {actionLoading
+                  ? "Memproses..."
+                  : approvalAction.status === "PUBLISHED"
+                  ? "Ya, Setujui"
+                  : "Ya, Tolak"}
+              </button>
+            </div>
           </div>
         </div>
       )}

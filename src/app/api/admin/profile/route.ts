@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "src/lib/db";
 import { auth } from "src/auth";
+import { getRequestIp, logActivity } from "@/lib/activity-log";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const user = await db.user.findUnique({
-      where: { id: (session.user as any).id },
+      where: { id: session.user.id },
       select: {
         id: true,
         name: true,
@@ -41,16 +42,17 @@ export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
     const { name, bio } = body;
+    const cleanedName = typeof name === "string" ? name.trim() : "";
 
-    if (!name) {
+    if (!cleanedName) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
     const user = await db.user.update({
-      where: { id: (session.user as any).id },
+      where: { id: session.user.id },
       data: {
-        name,
-        bio: bio || null,
+        name: cleanedName,
+        bio: typeof bio === "string" && bio.trim() ? bio.trim() : null,
       },
       select: {
         id: true,
@@ -60,6 +62,15 @@ export async function PUT(req: NextRequest) {
         avatarUrl: true,
         role: true,
       },
+    });
+
+    await logActivity({
+      userId: session.user.id,
+      action: "UPDATE_PROFILE",
+      description: `Memperbarui profil: ${user.name}`,
+      entityType: "User",
+      entityId: user.id,
+      ipAddress: getRequestIp(req),
     });
 
     return NextResponse.json(user);

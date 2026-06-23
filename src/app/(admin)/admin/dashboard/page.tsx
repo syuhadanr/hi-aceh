@@ -3,361 +3,373 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import DashboardChart from "@/components/admin/dashboard-chart";
 import {
-  FileText,
-  Eye,
   Activity,
-  CalendarDays,
   ArrowUpRight,
-  TrendingUp,
+  CalendarDays,
+  Eye,
+  FileText,
+  MousePointerClick,
+  Newspaper,
+  Users,
 } from "lucide-react";
 
 export const revalidate = 0;
 
-export default async function DashboardPage() {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+type DashboardSearchParams = Promise<{
+  from?: string;
+  to?: string;
+}>;
 
-  let totalArticles = 0;
-  let articlesToday = 0;
-  let visitorsToday = 0;
-  let onlineNow = 0;
-  let popularArticles: any[] = [];
-  let recentArticles: any[] = [];
-  let chartData: any[] = [];
+function toInputDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
 
-  try {
-    totalArticles = await db.article.count({
-      where: { deletedAt: null },
-    });
+function startOfDateInput(value: string | undefined, fallback: Date) {
+  const date = value ? new Date(`${value}T00:00:00`) : fallback;
+  if (Number.isNaN(date.getTime())) return fallback;
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
 
-    articlesToday = await db.article.count({
-      where: {
-        deletedAt: null,
-        createdAt: { gte: startOfDay },
-      },
-    });
+function endOfDateInput(value: string | undefined, fallback: Date) {
+  const date = value ? new Date(`${value}T23:59:59.999`) : fallback;
+  if (Number.isNaN(date.getTime())) return fallback;
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
 
-    visitorsToday = await db.pageView.count({
-      where: {
-        viewedAt: { gte: startOfDay },
-      },
-    });
+function eachDay(from: Date, to: Date) {
+  const days: Date[] = [];
+  const cursor = new Date(from);
+  cursor.setHours(0, 0, 0, 0);
+  const end = new Date(to);
+  end.setHours(0, 0, 0, 0);
+  while (cursor <= end && days.length < 45) {
+    days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
 
-    // Active visitors in last 5 minutes
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    onlineNow = await db.pageView.count({
-      where: { viewedAt: { gte: fiveMinutesAgo } },
-    });
+function isMobile(userAgent?: string | null) {
+  const ua = userAgent?.toLowerCase() || "";
+  return ua.includes("mobi") || ua.includes("android") || ua.includes("iphone");
+}
 
-    popularArticles = await db.article.findMany({
-      where: { deletedAt: null },
-      orderBy: { viewCount: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        title: true,
-        viewCount: true,
-        slug: true,
-        category: {
-          select: { name: true },
-        },
-      },
-    });
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: DashboardSearchParams;
+}) {
+  const params = await searchParams;
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
 
-    recentArticles = await db.article.findMany({
-      where: { deletedAt: null },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: {
-        author: {
-          select: { name: true },
-        },
-        category: {
-          select: { name: true },
-        },
-      },
-    });
+  const defaultFrom = new Date(todayStart);
+  defaultFrom.setDate(defaultFrom.getDate() - 6);
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
-
-    const pageViews = await db.pageView.findMany({
-      where: {
-        viewedAt: { gte: sevenDaysAgo },
-      },
-      select: {
-        viewedAt: true,
-        userAgent: true,
-      },
-    });
-
-    const daysOfWeek = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    const last7Days = Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      return d;
-    });
-
-    const hasRealViews = pageViews.length > 0;
-
-    chartData = last7Days.map((date) => {
-      const dayStr = daysOfWeek[date.getDay()];
-      const dateKey = date.toDateString();
-
-      const viewsForDay = pageViews.filter(
-        (pv) => new Date(pv.viewedAt).toDateString() === dateKey
-      );
-
-      let desktopCount = 0;
-      let mobileCount = 0;
-
-      viewsForDay.forEach((pv) => {
-        const ua = pv.userAgent?.toLowerCase() || "";
-        if (ua.includes("mobi") || ua.includes("android") || ua.includes("iphone")) {
-          mobileCount++;
-        } else {
-          desktopCount++;
-        }
-      });
-
-      return {
-        day: dayStr,
-        Desktop: hasRealViews ? desktopCount : Math.floor(Math.random() * 150) + 120,
-        Mobile: hasRealViews ? mobileCount : Math.floor(Math.random() * 100) + 60,
-      };
-    });
-  } catch (error) {
-    console.warn("DB fetch failed, falling back to mock data:", error);
-    totalArticles = 184;
-    articlesToday = 4;
-    visitorsToday = 1432;
-    onlineNow = 14;
-    popularArticles = [
-      { id: "1", title: "Kopi Gayo Tembus Pasar Eropa, Permintaan Meningkat Tajam", viewCount: 1204, category: { name: "Ekonomi" } },
-      { id: "2", title: "Wisata Sabang Kembali Dibuka untuk Turis Mancanegara", viewCount: 893, category: { name: "Wisata" } },
-      { id: "3", title: "Persiraja Banda Aceh Siap Hadapi Laga Perdana Liga 2", viewCount: 754, category: { name: "Olahraga" } },
-      { id: "4", title: "Festival Kuliner Aceh 2026 Segera Digelar di Blang Padang", viewCount: 512, category: { name: "Budaya" } },
-      { id: "5", title: "Pemerintah Aceh Luncurkan Program Beasiswa Santri Unggulan", viewCount: 442, category: { name: "Pendidikan" } },
-    ];
-    recentArticles = [
-      { id: "1", title: "Kopi Gayo Tembus Pasar Eropa, Permintaan Meningkat Tajam", status: "PUBLISHED", createdAt: new Date(), author: { name: "Budiman Redaksi" }, category: { name: "Ekonomi" } },
-      { id: "2", title: "Draf Qanun Pariwisata Halal Mulai Disosialisasikan", status: "PENDING", createdAt: new Date(Date.now() - 3600000), author: { name: "Siti Rahma" }, category: { name: "Politik" } },
-      { id: "3", title: "Persiraja Banda Aceh Siap Hadapi Laga Perdana Liga 2", status: "PUBLISHED", createdAt: new Date(Date.now() - 7200000), author: { name: "Ahmad Ilham" }, category: { name: "Olahraga" } },
-      { id: "4", title: "Rencana Tata Ruang Kota Banda Aceh Direvisi", status: "DRAFT", createdAt: new Date(Date.now() - 14400000), author: { name: "Budiman Redaksi" }, category: { name: "Daerah" } },
-      { id: "5", title: "Pemerintah Aceh Luncurkan Program Beasiswa Santri Unggulan", status: "SCHEDULED", createdAt: new Date(Date.now() - 86400000), author: { name: "Siti Rahma" }, category: { name: "Pendidikan" } },
-    ];
-
-    const daysOfWeek = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    chartData = Array.from({ length: 7 }).map((_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return {
-        day: daysOfWeek[date.getDay()],
-        Desktop: Math.floor(Math.random() * 150) + 120,
-        Mobile: Math.floor(Math.random() * 100) + 60,
-      };
-    });
+  let rangeFrom = startOfDateInput(params?.from, defaultFrom);
+  let rangeTo = endOfDateInput(params?.to, todayEnd);
+  if (rangeFrom > rangeTo) {
+    [rangeFrom, rangeTo] = [startOfDateInput(params?.to, defaultFrom), endOfDateInput(params?.from, todayEnd)];
   }
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("id-ID").format(num);
-  };
+  const fiveMinutesAgo = new Date();
+  fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
 
+  const [
+    totalArticles,
+    publishedArticles,
+    pendingArticles,
+    draftArticles,
+    totalViews,
+    totalUniqueVisitors,
+    viewsInRange,
+    uniqueVisitorsInRange,
+    visitorsToday,
+    onlineNow,
+    pageViewsInRange,
+    popularArticles,
+    recentArticles,
+  ] = await Promise.all([
+    db.article.count({ where: { deletedAt: null } }),
+    db.article.count({ where: { deletedAt: null, status: "PUBLISHED" } }),
+    db.article.count({ where: { deletedAt: null, status: "PENDING" } }),
+    db.article.count({ where: { deletedAt: null, status: "DRAFT" } }),
+    db.pageView.count(),
+    db.pageView.groupBy({ by: ["ipHash"] }).then((rows) => rows.length),
+    db.pageView.count({ where: { viewedAt: { gte: rangeFrom, lte: rangeTo } } }),
+    db.pageView
+      .groupBy({ by: ["ipHash"], where: { viewedAt: { gte: rangeFrom, lte: rangeTo } } })
+      .then((rows) => rows.length),
+    db.pageView.count({ where: { viewedAt: { gte: todayStart, lte: todayEnd } } }),
+    db.pageView
+      .groupBy({ by: ["ipHash"], where: { viewedAt: { gte: fiveMinutesAgo } } })
+      .then((rows) => rows.length),
+    db.pageView.findMany({
+      where: { viewedAt: { gte: rangeFrom, lte: rangeTo } },
+      select: { viewedAt: true, userAgent: true },
+    }),
+    db.article.findMany({
+      where: { deletedAt: null },
+      orderBy: { viewCount: "desc" },
+      take: 8,
+      select: {
+        id: true, title: true, viewCount: true, slug: true,
+        category: { select: { name: true } },
+      },
+    }),
+    db.article.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 7,
+      include: {
+        author: { select: { name: true } },
+        category: { select: { name: true } },
+      },
+    }),
+  ]);
+
+  const formatNumber = (num: number) => new Intl.NumberFormat("id-ID").format(num);
+  const dateRangeLabel = `${rangeFrom.toLocaleDateString("id-ID", {
+    day: "2-digit", month: "short", year: "numeric",
+  })} - ${rangeTo.toLocaleDateString("id-ID", {
+    day: "2-digit", month: "short", year: "numeric",
+  })}`;
+
+  // Pass ISO date string so chart can group by week/month client-side
+  const chartData = eachDay(rangeFrom, rangeTo).map((date) => {
+    const dateKey = date.toDateString();
+    const viewsForDay = pageViewsInRange.filter(
+      (pv) => new Date(pv.viewedAt).toDateString() === dateKey
+    );
+    return {
+      day: date.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
+      date: date.toISOString().slice(0, 10),
+      Desktop: viewsForDay.filter((pv) => !isMobile(pv.userAgent)).length,
+      Mobile: viewsForDay.filter((pv) => isMobile(pv.userAgent)).length,
+    };
+  });
+
+  // Stat card definitions
   const stats = [
+    {
+      title: "Total Pengunjung",
+      value: formatNumber(totalViews),
+      sub: "Semua kunjungan",
+      icon: Eye,
+      accent: "from-teal-500/10 to-transparent",
+      iconColor: "text-teal-500",
+      border: "border-teal-500/20",
+    },
+    {
+      title: "Pengunjung Unik",
+      value: formatNumber(totalUniqueVisitors),
+      sub: "Sepanjang waktu",
+      icon: Users,
+      accent: "from-indigo-500/10 to-transparent",
+      iconColor: "text-indigo-500",
+      border: "border-indigo-500/20",
+    },
+    {
+      title: "Views Periode",
+      value: formatNumber(viewsInRange),
+      sub: dateRangeLabel,
+      icon: CalendarDays,
+      accent: "from-emerald-500/10 to-transparent",
+      iconColor: "text-emerald-500",
+      border: "border-emerald-500/20",
+    },
+    {
+      title: "Unik Periode",
+      value: formatNumber(uniqueVisitorsInRange),
+      sub: dateRangeLabel,
+      icon: MousePointerClick,
+      accent: "from-amber-500/10 to-transparent",
+      iconColor: "text-amber-500",
+      border: "border-amber-500/20",
+    },
+    {
+      title: "Hari Ini",
+      value: formatNumber(visitorsToday),
+      sub: "Kunjungan hari ini",
+      icon: Activity,
+      accent: "from-rose-500/10 to-transparent",
+      iconColor: "text-rose-500",
+      border: "border-rose-500/20",
+    },
+    {
+      title: "Online Sekarang",
+      value: formatNumber(onlineNow),
+      sub: "Aktif 5 menit terakhir",
+      icon: Activity,
+      accent: "from-lime-500/10 to-transparent",
+      iconColor: "text-lime-500",
+      border: "border-lime-500/20",
+      pulse: true,
+    },
     {
       title: "Total Artikel",
       value: formatNumber(totalArticles),
-      description: "Jumlah artikel di database",
+      sub: `${publishedArticles} terbit, ${pendingArticles} menunggu`,
       icon: FileText,
-      iconColor: "text-teal-400",
-      iconBg: "bg-teal-500/10 border-teal-500/20",
+      accent: "from-sky-500/10 to-transparent",
+      iconColor: "text-sky-500",
+      border: "border-sky-500/20",
     },
     {
-      title: "Artikel Hari Ini",
-      value: formatNumber(articlesToday),
-      description: "Artikel baru ditulis hari ini",
-      icon: CalendarDays,
-      iconColor: "text-indigo-400",
-      iconBg: "bg-indigo-500/10 border-indigo-500/20",
-    },
-    {
-      title: "Pengunjung Hari Ini",
-      value: formatNumber(visitorsToday),
-      description: "Kunjungan halaman unik hari ini",
-      icon: Eye,
-      iconColor: "text-emerald-400",
-      iconBg: "bg-emerald-500/10 border-emerald-500/20",
-    },
-    {
-      title: "Pengunjung Online",
-      value: `${onlineNow} Aktif`,
-      description: "Aktif dalam 5 menit terakhir",
-      icon: Activity,
-      iconColor: "text-rose-400",
-      iconBg: "bg-rose-500/10 border-rose-500/20",
-      pulse: true,
+      title: "Draft",
+      value: formatNumber(draftArticles),
+      sub: "Belum diterbitkan",
+      icon: Newspaper,
+      accent: "from-zinc-500/10 to-transparent",
+      iconColor: "text-zinc-400",
+      border: "border-zinc-500/20",
     },
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br from-zinc-100 to-white dark:from-zinc-950 dark:to-zinc-900 p-6 md:p-8 shadow-xl">
-        <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial-gradient from-teal-500/10 via-transparent to-transparent opacity-60 pointer-events-none" />
-        <div className="relative z-10 space-y-2">
-          <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">Selamat Datang di Hi Aceh Redaksi</h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xl leading-relaxed">
-            Kelola, edit, dan terbitkan berita terkini tentang Aceh dan Indonesia dari dashboard modern ini.
-          </p>
-        </div>
+    <div className="space-y-6 max-w-7xl mx-auto">
+
+      {/* Page header + date filter */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Dashboard Analitik
+        </h2>
+
+        <form className="flex flex-wrap items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 self-start sm:self-auto shrink-0">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 whitespace-nowrap"></label>
+          <input
+            type="date"
+            name="from"
+            defaultValue={toInputDate(rangeFrom)}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-200 min-w-0 flex-1 sm:w-[130px] sm:flex-none"
+          />
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 whitespace-nowrap">–</label>
+          <input
+            type="date"
+            name="to"
+            defaultValue={toInputDate(rangeTo)}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-2 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-200 min-w-0 flex-1 sm:w-[130px] sm:flex-none"
+          />
+          <button className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-500 whitespace-nowrap">
+            Terapkan
+          </button>
+        </form>
       </div>
 
-      {/* Grid Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stat cards — shadcn-inspired, 4 cols */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.title}
-              className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-800/80 transition-all duration-200 rounded-xl p-5 shadow-sm dark:shadow-lg relative overflow-hidden group"
+              className={`relative overflow-hidden rounded-xl border bg-white dark:bg-zinc-950 shadow-sm ${stat.border} dark:border-opacity-40`}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors uppercase tracking-wider">
-                  {stat.title}
-                </span>
-                <div className={`flex items-center justify-center w-8 h-8 rounded-lg border ${stat.iconBg}`}>
-                  <Icon className={`w-4.5 h-4.5 ${stat.iconColor}`} />
+              {/* Subtle gradient wash */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.accent} pointer-events-none`} />
+
+              <div className="relative p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                    {stat.title}
+                  </p>
+                  <Icon className={`h-3.5 w-3.5 ${stat.iconColor}`} />
                 </div>
-              </div>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-800 dark:group-hover:text-zinc-50 transition-colors">
-                  {stat.value}
-                </span>
-                {stat.pulse && (
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+
+                <div className="flex items-end gap-2">
+                  <span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-none">
+                    {stat.value}
                   </span>
-                )}
+                  {stat.pulse && (
+                    <span className="relative flex h-2 w-2 mb-0.5 shrink-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-1.5 text-[10px] text-zinc-400 leading-snug truncate">
+                  {stat.sub}
+                </p>
               </div>
-              <p className="text-xs text-zinc-500 mt-1">{stat.description}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Weekly Visitor Chart */}
-      <DashboardChart data={chartData} />
+      <DashboardChart data={chartData} subtitle={dateRangeLabel} />
 
-      {/* Bottom Lists split layout */}
+      {/* Popular + Recent articles */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Popular Articles */}
-        <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm dark:shadow-lg flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-              <TrendingUp className="w-4.5 h-4.5 text-teal-400" />
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-sm lg:col-span-1">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              <Eye className="h-4 w-4 text-teal-500" />
               Artikel Terpopuler
             </h3>
-            <span className="text-[10px] text-zinc-500 font-semibold px-2 py-0.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 rounded">Minggu Ini</span>
+            <span className="text-[10px] font-bold uppercase text-zinc-400">All time</span>
           </div>
-
-          <div className="flex-1 divide-y divide-zinc-100 dark:divide-zinc-900">
-            {popularArticles.length === 0 ? (
-              <div className="py-8 text-center text-xs text-zinc-500">Belum ada data artikel populer.</div>
-            ) : (
-              popularArticles.map((art, index) => (
-                <div key={art.id} className="py-3 flex items-center gap-3 group/item">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-500 dark:text-zinc-400 group-hover/item:border-teal-500/30 group-hover/item:text-teal-400 transition-colors shrink-0">
-                    {index + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-teal-500 dark:hover:text-teal-400 transition-colors truncate cursor-pointer leading-tight">
-                      {art.title}
-                    </h4>
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">
-                      {art.category?.name || "Kategori"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-2 py-1 rounded-md shrink-0">
-                    <Eye className="w-3 h-3 text-zinc-400 dark:text-zinc-500" />
-                    {formatNumber(art.viewCount)}
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-900">
+            {popularArticles.map((art, index) => (
+              <Link key={art.id} href={`/admin/articles/${art.id}/edit`} className="flex items-center gap-3 py-3 text-xs hover:text-teal-500">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold text-zinc-500">
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-zinc-700 dark:text-zinc-300">{art.title}</span>
+                  <span className="mt-0.5 block text-[10px] text-zinc-400">{art.category?.name || "Kategori"}</span>
+                </span>
+                <span className="rounded-md bg-zinc-100 dark:bg-zinc-900 px-2 py-1 text-[10px] font-bold text-zinc-500">
+                  {formatNumber(art.viewCount)}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Recent Articles Table */}
-        <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm dark:shadow-lg lg:col-span-2 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-              <FileText className="w-4.5 h-4.5 text-indigo-400" />
+        <div className="hidden sm:block rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-sm lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              <FileText className="h-4 w-4 text-indigo-500" />
               Artikel Terbaru
             </h3>
-            <Link
-              href="/admin/articles"
-              className="text-[10px] font-bold text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors group"
-            >
-              Lihat Semua
-              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <Link href="/admin/articles" className="flex items-center gap-1 text-[10px] font-bold uppercase text-teal-500 hover:text-teal-400">
+              Lihat Semua <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full min-w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-                  <th className="py-2.5 px-3">Judul</th>
-                  <th className="py-2.5 px-3">Penulis</th>
-                  <th className="py-2.5 px-3">Rubrik</th>
-                  <th className="py-2.5 px-3">Tanggal</th>
-                  <th className="py-2.5 px-3 text-right">Status</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-zinc-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500">
+                <tr>
+                  <th className="py-2.5">Judul</th>
+                  <th className="py-2.5">Penulis</th>
+                  <th className="py-2.5">Rubrik</th>
+                  <th className="py-2.5">Tanggal</th>
+                  <th className="py-2.5 text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                {recentArticles.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-xs text-zinc-500">
-                      Belum ada artikel terbaru.
+                {recentArticles.map((art) => (
+                  <tr key={art.id}>
+                    <td className="max-w-[220px] truncate py-3 font-semibold text-zinc-700 dark:text-zinc-300">{art.title}</td>
+                    <td className="py-3 text-zinc-500">{art.author?.name}</td>
+                    <td className="py-3 text-zinc-500">{art.category?.name}</td>
+                    <td className="py-3 text-zinc-400">
+                      {new Date(art.createdAt).toLocaleDateString("id-ID", {
+                        day: "2-digit", month: "short", year: "numeric",
+                      })}
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className="rounded border border-zinc-200 dark:border-zinc-800 px-2 py-0.5 text-[9px] font-bold uppercase text-zinc-500">
+                        {art.status}
+                      </span>
                     </td>
                   </tr>
-                ) : (
-                  recentArticles.map((art) => {
-                    const statusConfig: Record<string, { label: string; style: string }> = {
-                      DRAFT: { label: "Draft", style: "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/40" },
-                      PENDING: { label: "Pending", style: "border-amber-500/30 text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/5" },
-                      PUBLISHED: { label: "Terbit", style: "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/5" },
-                      SCHEDULED: { label: "Terjadwal", style: "border-blue-500/30 text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/5" },
-                    };
-                    const status = statusConfig[art.status] || { label: art.status, style: "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800" };
-
-                    return (
-                      <tr key={art.id} className="text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors group">
-                        <td className="py-3 px-3 max-w-[200px] truncate font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
-                          {art.title}
-                        </td>
-                        <td className="py-3 px-3 text-zinc-500 dark:text-zinc-400 font-medium">{art.author?.name}</td>
-                        <td className="py-3 px-3">
-                          <span className="text-zinc-500 font-semibold">{art.category?.name}</span>
-                        </td>
-                        <td className="py-3 px-3 text-zinc-400 dark:text-zinc-500">
-                          {new Date(art.createdAt).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded border uppercase ${status.style}`}>
-                            {status.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
+                ))}
               </tbody>
             </table>
           </div>

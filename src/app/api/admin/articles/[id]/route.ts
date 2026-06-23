@@ -29,13 +29,6 @@ export async function GET(
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
-    // PENULIS can only view own articles
-    const userRole = (session.user as any)?.role;
-    const userId = (session.user as any)?.id;
-    if (userRole === "PENULIS" && article.authorId !== userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     return NextResponse.json(article);
   } catch (error) {
     console.error("Article fetch error:", error);

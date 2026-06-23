@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -16,7 +17,6 @@ import {
   LogOut,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
   ClipboardList,
   BookOpen,
 } from "lucide-react";
@@ -46,6 +46,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const role = session?.user?.role || "PENULIS";
   const name = session?.user?.name || "Pengguna";
+  const avatarUrl = session?.user?.avatarUrl || "";
+  const isAdmin = role === "ADMIN";
 
   // Fetch pending count for Admin / Editor
   useEffect(() => {
@@ -71,6 +73,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   // Fetch page titles dynamically
   useEffect(() => {
+    if (!isAdmin) return;
+
     const fetchPageTitles = async () => {
       try {
         const res = await fetch("/api/pages");
@@ -91,7 +95,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       }
     };
     fetchPageTitles();
-  }, [pathname]);
+  }, [isAdmin, pathname]);
 
   const toggleSubmenu = (name: string) => {
     setOpenSubmenus((prev) => ({
@@ -113,65 +117,63 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       submenu: [
         { name: "Semua Artikel", href: "/admin/articles" },
         { name: "Tulis Baru", href: "/admin/articles/new" },
-        { name: "Sampah", href: "/admin/articles/trash" },
+        ...(role === "PENULIS"
+          ? []
+          : [{ name: "Sampah", href: "/admin/articles/trash" }]),
       ],
-    },
-    {
-      name: "Halaman",
-      icon: BookOpen,
-      submenu: [
-        { name: pageTitles.about, href: "/admin/pages/about" },
-        { name: pageTitles.redaksi, href: "/admin/pages/redaksi" },
-        { name: pageTitles.contact, href: "/admin/pages/contact" },
-        { name: pageTitles.disclaimer, href: "/admin/pages/disclaimer" },
-        { name: pageTitles["pedoman-media"], href: "/admin/pages/pedoman-media" },
-        { name: pageTitles["privacy-policy"], href: "/admin/pages/privacy-policy" },
-        { name: pageTitles["terms-of-service"], href: "/admin/pages/terms-of-service" },
-      ],
-    },
-    {
-      name: "Rubrik",
-      href: "/admin/categories",
-      icon: Layers,
-    },
-    {
-      name: "Tag",
-      href: "/admin/tags",
-      icon: Tag,
     },
     {
       name: "Media",
       href: "/admin/media",
       icon: ImageIcon,
     },
-    {
-      name: "Iklan",
-      href: "/admin/ads",
-      icon: Megaphone,
-    },
-    ...(role === "ADMIN"
+    ...(isAdmin
       ? [
+          {
+            name: "Halaman",
+            icon: BookOpen,
+            submenu: [
+              { name: pageTitles.about, href: "/admin/pages/about" },
+              { name: pageTitles.redaksi, href: "/admin/pages/redaksi" },
+              { name: pageTitles.contact, href: "/admin/pages/contact" },
+              { name: pageTitles.disclaimer, href: "/admin/pages/disclaimer" },
+              { name: pageTitles["pedoman-media"], href: "/admin/pages/pedoman-media" },
+              { name: pageTitles["privacy-policy"], href: "/admin/pages/privacy-policy" },
+              { name: pageTitles["terms-of-service"], href: "/admin/pages/terms-of-service" },
+            ],
+          },
+          {
+            name: "Rubrik",
+            href: "/admin/categories",
+            icon: Layers,
+          },
+          {
+            name: "Tag",
+            href: "/admin/tags",
+            icon: Tag,
+          },
+          {
+            name: "Iklan",
+            href: "/admin/ads",
+            icon: Megaphone,
+          },
           {
             name: "Pengguna",
             href: "/admin/users",
             icon: Users,
           },
-        ]
-      : []),
-    ...(role === "ADMIN" || role === "EDITOR"
-      ? [
           {
             name: "Log Aktivitas",
             href: "/admin/activity",
             icon: ClipboardList,
           },
+          {
+            name: "Pengaturan",
+            href: "/admin/settings",
+            icon: Settings,
+          },
         ]
       : []),
-    {
-      name: "Pengaturan",
-      href: "/admin/settings",
-      icon: Settings,
-    },
   ];
 
   return (
@@ -187,8 +189,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {/* Brand Logo */}
         <div className="flex items-center justify-between gap-3 px-6 h-16 border-b border-zinc-800/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-extrabold shadow-lg shadow-teal-500/20">
-              H
+            <div className="relative flex items-center justify-center w-9 h-9 overflow-hidden rounded-lg bg-zinc-900 shadow-lg shadow-teal-500/10">
+              <Image
+                src="/logo.png"
+                alt="Hi Aceh"
+                fill
+                sizes="36px"
+                className="object-contain p-1"
+                priority
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-zinc-50 tracking-tight leading-none">Hi Aceh</span>
@@ -301,8 +310,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* User Section at Bottom */}
       <div className="p-4 border-t border-zinc-900 bg-zinc-950/40 shrink-0">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg border border-zinc-900 bg-zinc-900/30 backdrop-blur-sm">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500/10 text-teal-400 font-bold border border-teal-500/20 text-xs shrink-0 select-none uppercase">
-            {name.substring(0, 2)}
+          <div className="relative flex items-center justify-center w-8 h-8 overflow-hidden rounded-full bg-teal-500/10 text-teal-400 font-bold border border-teal-500/20 text-xs shrink-0 select-none uppercase">
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt={name} fill sizes="32px" className="object-cover" />
+            ) : (
+              name.substring(0, 2)
+            )}
           </div>
           <div className="flex flex-col min-w-0 flex-1">
             <span className="text-xs font-semibold text-zinc-200 truncate leading-none">

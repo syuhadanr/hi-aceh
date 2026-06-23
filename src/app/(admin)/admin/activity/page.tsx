@@ -47,6 +47,10 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
   UPLOAD_MEDIA: { label: "Upload Media", color: "border-pink-500/30 text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-500/5" },
   DELETE_MEDIA: { label: "Hapus Media", color: "border-red-500/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/5" },
   UPDATE_SETTINGS: { label: "Ubah Pengaturan", color: "border-orange-500/30 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/5" },
+  UPDATE_PROFILE: { label: "Ubah Profil", color: "border-cyan-500/30 text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/5" },
+  UPLOAD_AVATAR: { label: "Foto Profil", color: "border-fuchsia-500/30 text-fuchsia-600 dark:text-fuchsia-400 bg-fuchsia-50 dark:bg-fuchsia-500/5" },
+  SUBMIT_ARTICLE: { label: "Ajukan Artikel", color: "border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/5" },
+  REJECT_ARTICLE: { label: "Tolak Artikel", color: "border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/5" },
 };
 
 const ROLE_STYLE: Record<string, string> = {
@@ -71,60 +75,6 @@ function timeAgo(dateStr: string): string {
   });
 }
 
-// Mock data for when the activity_logs table doesn't have data yet
-const MOCK_LOGS: LogEntry[] = [
-  {
-    id: "1",
-    action: "PUBLISH_ARTICLE",
-    description: "Menerbitkan artikel: \"Kopi Gayo Tembus Pasar Eropa\"",
-    entityType: "Article",
-    entityId: "art-1",
-    ipAddress: "192.168.1.1",
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    user: { id: "u1", name: "Admin Redaksi", email: "admin@hiaceh.com", role: "ADMIN" },
-  },
-  {
-    id: "2",
-    action: "CREATE_ARTICLE",
-    description: "Membuat artikel baru: \"Festival Kuliner Aceh 2026\"",
-    entityType: "Article",
-    entityId: "art-2",
-    ipAddress: "192.168.1.2",
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    user: { id: "u2", name: "Siti Rahma", email: "siti@hiaceh.com", role: "PENULIS" },
-  },
-  {
-    id: "3",
-    action: "UPDATE_SETTINGS",
-    description: "Memperbarui pengaturan sistem: nama portal, email kontak",
-    entityType: null,
-    entityId: null,
-    ipAddress: "192.168.1.1",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    user: { id: "u1", name: "Admin Redaksi", email: "admin@hiaceh.com", role: "ADMIN" },
-  },
-  {
-    id: "4",
-    action: "UPLOAD_MEDIA",
-    description: "Mengunggah media: photo-gayo-2026.jpg (1.2 MB)",
-    entityType: "Media",
-    entityId: "med-1",
-    ipAddress: "192.168.1.3",
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    user: { id: "u3", name: "Ahmad Ilham", email: "ahmad@hiaceh.com", role: "EDITOR" },
-  },
-  {
-    id: "5",
-    action: "DELETE_ARTICLE",
-    description: "Memindahkan artikel ke sampah: \"Draft Berita Lama\"",
-    entityType: "Article",
-    entityId: "art-3",
-    ipAddress: "192.168.1.1",
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    user: { id: "u1", name: "Admin Redaksi", email: "admin@hiaceh.com", role: "ADMIN" },
-  },
-];
-
 export default function ActivityLogPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
@@ -135,7 +85,6 @@ export default function ActivityLogPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isMockData, setIsMockData] = useState(false);
 
   const fetchLogs = useCallback(
     async (p = page) => {
@@ -150,24 +99,16 @@ export default function ActivityLogPage() {
         const res = await fetch(`/api/admin/activity?${params}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.logs.length === 0 && p === 1) {
-            // Use mock data for empty state
-            setLogs(MOCK_LOGS);
-            setTotal(MOCK_LOGS.length);
-            setTotalPages(1);
-            setIsMockData(true);
-          } else {
-            setLogs(data.logs);
-            setTotalPages(data.pagination.totalPages);
-            setTotal(data.pagination.total);
-            setIsMockData(false);
-          }
+          setLogs(data.logs);
+          setTotalPages(data.pagination.totalPages);
+          setTotal(data.pagination.total);
           setUsers(data.users || []);
         }
       } catch (e) {
         console.error(e);
-        setLogs(MOCK_LOGS);
-        setIsMockData(true);
+        setLogs([]);
+        setTotal(0);
+        setTotalPages(1);
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -203,12 +144,7 @@ export default function ActivityLogPage() {
           <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             Log Aktivitas
           </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Riwayat semua tindakan yang dilakukan di panel admin
-            {isMockData && (
-              <span className="ml-2 text-amber-500 font-semibold">(Data contoh — log nyata akan muncul setelah aktivitas terjadi)</span>
-            )}
-          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">`r`n            Riwayat semua tindakan yang dilakukan di panel admin`r`n          </p>
         </div>
         <button
           onClick={handleRefresh}
@@ -413,3 +349,4 @@ export default function ActivityLogPage() {
     </div>
   );
 }
+

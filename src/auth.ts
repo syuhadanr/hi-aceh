@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import bcrypt from "bcryptjs";
 
@@ -56,6 +56,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.name,
             email: user.email,
             role: user.role,
+            bio: user.bio,
+            avatarUrl: user.avatarUrl,
           };
         } finally {
           await prisma.$disconnect();
@@ -64,17 +66,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
+        token.role = user.role;
+        token.bio = user.bio;
+        token.avatarUrl = user.avatarUrl;
       }
+
+      if (trigger === "update" && session?.user) {
+        token.name = session.user.name ?? token.name;
+        token.bio = session.user.bio ?? token.bio;
+        token.avatarUrl = session.user.avatarUrl ?? token.avatarUrl;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
+        session.user.id = token.id as string;
+        session.user.role = token.role as UserRole;
+        session.user.bio = token.bio as string | null | undefined;
+        session.user.avatarUrl = token.avatarUrl as string | null | undefined;
       }
       return session;
     },

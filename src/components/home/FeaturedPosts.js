@@ -22,7 +22,7 @@ export default function FeaturedPosts({ articles }) {
 
             {/* Mobile: compact list */}
             <div className="flex flex-col gap-6 sm:hidden">
-                {mobileList.slice(0, 3).map((post, idx) => (
+                {mobileList.slice(0, 3).map((post) => (
                     <a key={post.id} href={`/article/${post.slug}`} className="flex gap-4 group">
                         <div className="relative w-24 h-20 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                             <Image src={post.image} alt={post.title} fill className="object-cover" />
@@ -80,12 +80,12 @@ export default function FeaturedPosts({ articles }) {
                         <div key={post.id} className="flex gap-5 bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group">
                             <div className="relative w-44 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900 aspect-[4/3]">
                                 <Image src={post.image} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <span className="absolute top-3 left-3 bg-zinc-950/80 text-white text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded backdrop-blur-sm">
-                                    {post.category}
-                                </span>
                             </div>
                             <div className="flex flex-col flex-1 justify-between py-1 gap-2">
                                 <div className="flex flex-col gap-1.5">
+                                    <span className="text-[10px] uppercase font-bold text-brand-green tracking-wider font-sans">
+                                        {post.category}
+                                    </span>
                                     <Link href={`/article/${post.slug}`}>
                                         <h3 className="font-bold text-lg leading-snug group-hover:text-primary text-zinc-900 dark:text-white transition-colors">
                                             {post.title}

@@ -4,6 +4,7 @@ import { auth } from "src/auth";
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
+import { getRequestIp, logActivity } from "@/lib/activity-log";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -25,11 +26,11 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const metadata = await sharp(buffer).metadata();
 
     const timestamp = Date.now();
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_").toLowerCase();
-    const filename = `${timestamp}-${cleanFileName}`;
+    const baseName = path.basename(cleanFileName, path.extname(cleanFileName));
+    const filename = `${timestamp}-${baseName}.jpg`;
     const filePath = path.join(UPLOAD_DIR, filename);
 
     await sharp(buffer)
@@ -38,16 +39,33 @@ export async function POST(req: NextRequest) {
       .toFile(filePath);
 
     const relativeUrl = `/uploads/${filename}`;
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
-    await db.user.update({
+    const user = await db.user.update({
       where: { id: userId },
       data: {
         avatarUrl: relativeUrl,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        bio: true,
+        avatarUrl: true,
+        role: true,
+      },
     });
 
-    return NextResponse.json({ avatarUrl: relativeUrl });
+    await logActivity({
+      userId,
+      action: "UPLOAD_AVATAR",
+      description: `Mengunggah foto profil: ${user.name}`,
+      entityType: "User",
+      entityId: user.id,
+      ipAddress: getRequestIp(req),
+    });
+
+    return NextResponse.json(user);
   } catch (error) {
     console.error("Avatar upload error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

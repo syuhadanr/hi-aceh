@@ -7,7 +7,7 @@ import { Camera, Save, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const { showToast } = useToast();
 
   const [name, setName] = useState("");
@@ -21,7 +21,8 @@ export default function ProfilePage() {
     if (session?.user) {
       setName(session.user.name || "");
       setEmail(session.user.email || "");
-      setAvatarUrl((session.user as any).avatarUrl || "");
+      setBio(session.user.bio || "");
+      setAvatarUrl(session.user.avatarUrl || "");
     }
   }, [session]);
 
@@ -58,7 +59,17 @@ export default function ProfilePage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setAvatarUrl(data.avatarUrl);
+        setName(data.name || name);
+        setEmail(data.email || email);
+        setBio(data.bio || "");
+        setAvatarUrl(data.avatarUrl || "");
+        await update({
+          user: {
+            name: data.name,
+            bio: data.bio,
+            avatarUrl: data.avatarUrl,
+          },
+        });
         showToast("Avatar berhasil diunggah", "success");
       } else {
         showToast(data.error || "Gagal mengunggah avatar", "error");
@@ -81,6 +92,17 @@ export default function ProfilePage() {
       });
       const data = await res.json();
       if (res.ok) {
+        setName(data.name || "");
+        setEmail(data.email || "");
+        setBio(data.bio || "");
+        setAvatarUrl(data.avatarUrl || "");
+        await update({
+          user: {
+            name: data.name,
+            bio: data.bio,
+            avatarUrl: data.avatarUrl,
+          },
+        });
         showToast("Profil berhasil disimpan", "success");
       } else {
         showToast(data.error || "Gagal menyimpan profil", "error");

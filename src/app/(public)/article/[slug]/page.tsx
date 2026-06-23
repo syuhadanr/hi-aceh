@@ -145,13 +145,19 @@ export default async function ArticlePage({ params }: PageProps) {
                     <i className="material-icons text-sm">calendar_today</i>
                     <span>{article.publishedAt}</span>
                   </div>
+                  <div className="flex items-center gap-1">
+                    <i className="material-icons text-sm">schedule</i>
+                    <span>
+                      {new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
+                {/* <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1">
                     <i className="material-icons text-sm text-gray-400">visibility</i>{" "}
                     <ViewCounter slug={slug} />
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* Mobile meta row */}

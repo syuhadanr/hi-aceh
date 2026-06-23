@@ -4,6 +4,7 @@ import { auth } from "src/auth";
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
+import { getRequestIp, logActivity } from "@/lib/activity-log";
 
 const MAX_IMAGE_SIZE = 200_000; // 200 KB target maximum
 const MIN_IMAGE_QUALITY = 35;
@@ -54,7 +55,7 @@ async function compressImage(buffer: Buffer) {
   };
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(filePath, outputBuffer);
 
     const relativeUrl = `/uploads/${filename}`;
-    const userId = (session.user as any)?.id;
+    const userId = session.user?.id;
 
     const media = await db.media.create({
       data: {
@@ -137,6 +138,15 @@ export async function POST(req: NextRequest) {
       include: {
         uploadedBy: { select: { name: true } },
       },
+    });
+
+    await logActivity({
+      userId,
+      action: "UPLOAD_MEDIA",
+      description: `Mengunggah media: ${file.name} (${Math.round(outputBuffer.length / 1024)} KB)`,
+      entityType: "Media",
+      entityId: media.id,
+      ipAddress: getRequestIp(req),
     });
 
     return NextResponse.json(media);
@@ -189,6 +199,15 @@ export async function DELETE(req: NextRequest) {
 
     // Delete record from DB
     await db.media.delete({ where: { id } });
+
+    await logActivity({
+      userId: session.user?.id,
+      action: "DELETE_MEDIA",
+      description: `Menghapus media: ${media.filename}`,
+      entityType: "Media",
+      entityId: media.id,
+      ipAddress: getRequestIp(req),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

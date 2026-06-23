@@ -24,17 +24,17 @@ export function useToast() {
 }
 
 const icons: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />,
-  error: <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />,
-  warning: <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />,
-  info: <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />,
+  success: <CheckCircle className="w-5 h-5 text-emerald-300 flex-shrink-0" />,
+  error: <XCircle className="w-5 h-5 text-red-300 flex-shrink-0" />,
+  warning: <AlertTriangle className="w-5 h-5 text-amber-300 flex-shrink-0" />,
+  info: <Info className="w-5 h-5 text-sky-300 flex-shrink-0" />,
 };
 
-const barColors: Record<ToastType, string> = {
-  success: "bg-emerald-500",
-  error: "bg-red-500",
-  warning: "bg-amber-500",
-  info: "bg-blue-500",
+const toastStyles: Record<ToastType, string> = {
+  success: "border-emerald-400/40 bg-emerald-950 text-emerald-50 shadow-emerald-950/30",
+  error: "border-red-400/40 bg-red-950 text-red-50 shadow-red-950/30",
+  warning: "border-amber-400/50 bg-amber-950 text-amber-50 shadow-amber-950/30",
+  info: "border-sky-400/40 bg-sky-950 text-sky-50 shadow-sky-950/30",
 };
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: string) => void }) {
@@ -58,19 +58,17 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: string) => 
 
   return (
     <div
-      className={`relative flex items-start gap-3 bg-zinc-900 border border-zinc-700/60 text-white text-xs rounded-xl shadow-2xl pl-4 pr-3 py-3 w-[340px] max-w-[90vw] overflow-hidden transition-all duration-300 ease-out ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      className={`relative flex items-start gap-3 border text-sm rounded-2xl shadow-2xl px-5 py-4 w-[460px] max-w-[calc(100vw-2rem)] overflow-hidden transition-all duration-300 ease-out ${toastStyles[toast.type]} ${
+        visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-4 scale-95"
       }`}
     >
-      {/* Left color bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${barColors[toast.type]}`} />
       {icons[toast.type]}
-      <span className="flex-1 leading-snug text-zinc-100 font-medium">{toast.message}</span>
+      <span className="flex-1 leading-snug font-semibold">{toast.message}</span>
       <button
         onClick={handleClose}
-        className="flex-shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors mt-0.5"
+        className="flex-shrink-0 text-white/50 hover:text-white transition-colors mt-0.5"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" />
       </button>
     </div>
   );
@@ -92,7 +90,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {/* Toast portal — fixed bottom-right */}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 items-end pointer-events-none">
+      <div className="fixed top-5 left-1/2 z-[9999] flex -translate-x-1/2 flex-col gap-3 items-center pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto">
             <ToastItem toast={t} onClose={removeToast} />

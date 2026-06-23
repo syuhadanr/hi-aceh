@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
@@ -14,18 +15,14 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const name = session?.user?.name || "Pengguna";
   const email = session?.user?.email || "";
   const role = session?.user?.role || "PENULIS";
-
-  // Prevent SSR hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const avatarUrl = session?.user?.avatarUrl || "";
+  const isAdmin = role === "ADMIN";
 
   // Resolve current page title
   const getPageTitle = () => {
@@ -81,19 +78,18 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
       {/* User Actions */}
       <div className="flex items-center gap-2">
         {/* Dark/Light mode toggle */}
-        {mounted && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-805 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 text-zinc-500 dark:text-zinc-400 hover:text-zinc-850 hover:bg-zinc-100 dark:hover:text-zinc-100 transition-all cursor-pointer"
-            title="Ganti Tema"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 text-amber-500" />
-            ) : (
-              <Moon className="w-4 h-4 text-indigo-500" />
-            )}
-          </button>
-        )}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-805 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 text-zinc-500 dark:text-zinc-400 hover:text-zinc-850 hover:bg-zinc-100 dark:hover:text-zinc-100 transition-all cursor-pointer"
+          title="Ganti Tema"
+          suppressHydrationWarning
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 text-amber-500" />
+          ) : (
+            <Moon className="w-4 h-4 text-indigo-500" />
+          )}
+        </button>
 
         {/* Dropdown menu */}
         <div className="relative" ref={dropdownRef}>
@@ -101,8 +97,12 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-350 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-900/60 transition-all select-none cursor-pointer group"
           >
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/20 text-[10px] uppercase select-none">
-              {name.substring(0, 2).toUpperCase()}
+            <div className="relative flex items-center justify-center w-6 h-6 overflow-hidden rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/20 text-[10px] uppercase select-none">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={name} fill sizes="24px" className="object-cover" />
+              ) : (
+                name.substring(0, 2).toUpperCase()
+              )}
             </div>
             <span className="hidden sm:inline text-xs font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
               {name}
@@ -134,16 +134,18 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
                   <User className="w-3.5 h-3.5" />
                   <span>Profil Saya</span>
                 </button>
-                <button
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    window.location.href = "/admin/settings";
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 hover:bg-zinc-50 dark:hover:text-zinc-200 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>Pengaturan</span>
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      window.location.href = "/admin/settings";
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 hover:bg-zinc-50 dark:hover:text-zinc-200 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Pengaturan</span>
+                  </button>
+                )}
               </div>
 
               <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5" />

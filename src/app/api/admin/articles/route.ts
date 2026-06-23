@@ -1,6 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
+import { ArticleStatus, Prisma } from "@prisma/client";
 import { db } from "src/lib/db";
 import { auth } from "src/auth";
+import { getRequestIp, logActivity } from "@/lib/activity-log";
+
+const ARTICLE_STATUSES = new Set<string>(Object.values(ArticleStatus));
 
 async function resolveTagIds(tagNames: string[]): Promise<string[]> {
   if (!tagNames || tagNames.length === 0) return [];
@@ -35,6 +39,30 @@ async function resolveTagIds(tagNames: string[]): Promise<string[]> {
   return ids;
 }
 
+function resolveArticleStatusForRole({
+  requestedStatus,
+  existingStatus,
+  role,
+}: {
+  requestedStatus?: string | null;
+  existingStatus?: ArticleStatus;
+  role?: string;
+}): ArticleStatus {
+  const fallbackStatus = existingStatus || "DRAFT";
+
+  if (role !== "PENULIS") {
+    return ARTICLE_STATUSES.has(requestedStatus || "")
+      ? (requestedStatus as ArticleStatus)
+      : fallbackStatus;
+  }
+
+  if (!requestedStatus || requestedStatus === "DRAFT") {
+    return existingStatus === "PUBLISHED" ? "PENDING" : "DRAFT";
+  }
+
+  return "PENDING";
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) {
@@ -50,8 +78,13 @@ export async function GET(req: NextRequest) {
     const categoryId = searchParams.get("categoryId");
     const authorId = searchParams.get("authorId");
     const trash = searchParams.get("trash") === "true";
+    const userRole = session.user?.role;
 
-    const where: any = {};
+    if (trash && userRole === "PENULIS") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const where: Prisma.ArticleWhereInput = {};
 
     // Trash filter
     if (trash) {
@@ -61,8 +94,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Status filter
-    if (status) {
-      where.status = status;
+    if (status && ARTICLE_STATUSES.has(status)) {
+      where.status = status as ArticleStatus;
     }
 
     // Category filter
@@ -70,14 +103,8 @@ export async function GET(req: NextRequest) {
       where.categoryId = categoryId;
     }
 
-    // Author filter (PENULIS can only see own articles)
-    const userRole = (session.user as any)?.role;
-    const userId = (session.user as any)?.id;
-
     if (authorId) {
       where.authorId = authorId;
-    } else if (userRole === "PENULIS") {
-      where.authorId = userId;
     }
 
     // Search filter
@@ -102,7 +129,10 @@ export async function GET(req: NextRequest) {
         },
         orderBy: (() => {
           const sortParam = searchParams.get("sort") || "publishedAt_desc";
-          const sortMap: Record<string, any> = {
+          const sortMap: Record<
+            string,
+            Prisma.ArticleOrderByWithRelationInput | Prisma.ArticleOrderByWithRelationInput[]
+          > = {
             publishedAt_desc: [{ publishedAt: "desc" }, { createdAt: "desc" }],
             updatedAt_desc: { updatedAt: "desc" },
             createdAt_desc: { createdAt: "desc" },
@@ -183,8 +213,8 @@ export async function POST(req: NextRequest) {
       slug = `${slug}-${Date.now().toString(36)}`;
     }
 
-    const userRole = (session.user as any)?.role;
-    const sessionUserId = (session.user as any)?.id;
+    const userRole = session.user?.role;
+    const sessionUserId = session.user?.id;
     let resolvedAuthorId = sessionUserId;
     if ((userRole === "ADMIN" || userRole === "EDITOR") && authorId) {
       resolvedAuthorId = authorId;
@@ -195,6 +225,15 @@ export async function POST(req: NextRequest) {
       finalTagIds = await resolveTagIds(tagNames);
     }
 
+    const resolvedStatus = resolveArticleStatusForRole({
+      requestedStatus: status,
+      role: userRole,
+    });
+    const resolvedEditorId =
+      userRole === "ADMIN" || userRole === "EDITOR"
+        ? editorId || (resolvedStatus === "PUBLISHED" ? sessionUserId : null)
+        : null;
+
     const article = await db.article.create({
       data: {
         title,
@@ -203,12 +242,17 @@ export async function POST(req: NextRequest) {
         excerpt: excerpt || null,
         type: type || "TEKS",
         videoUrl: videoUrl || null,
-        status: status || "DRAFT",
+        status: resolvedStatus,
         isBreaking: isBreaking || false,
         isFeatured: isFeatured || false,
-        publishedAt: publishedAt ? new Date(publishedAt) : (status === "PUBLISHED" ? new Date() : null),
+        publishedAt:
+          resolvedStatus === "SCHEDULED" && publishedAt
+            ? new Date(publishedAt)
+            : resolvedStatus === "PUBLISHED"
+            ? new Date()
+            : null,
         authorId: resolvedAuthorId,
-        editorId: editorId || null,
+        editorId: resolvedEditorId,
         sumberName: sumberName || null,
         sumberUrl: sumberUrl || null,
         categoryId,
@@ -223,6 +267,18 @@ export async function POST(req: NextRequest) {
         category: { select: { id: true, name: true } },
         tags: { select: { id: true, name: true } },
       },
+    });
+
+    await logActivity({
+      userId: session.user.id,
+      action: resolvedStatus === "PENDING" ? "SUBMIT_ARTICLE" : "CREATE_ARTICLE",
+      description:
+        resolvedStatus === "PENDING"
+          ? `Mengajukan artikel untuk persetujuan: "${article.title}"`
+          : `Membuat artikel baru: "${article.title}"`,
+      entityType: "Article",
+      entityId: article.id,
+      ipAddress: getRequestIp(req),
     });
 
     return NextResponse.json(article);
@@ -279,12 +335,8 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Check ownership for PENULIS
-    const userRole = (session.user as any)?.role;
-    const userId = (session.user as any)?.id;
-    if (userRole === "PENULIS" && existing.authorId !== userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const userRole = session.user?.role;
+    const sessionUserId = session.user?.id;
 
     let resolvedAuthorId = existing.authorId;
     if ((userRole === "ADMIN" || userRole === "EDITOR") && authorId) {
@@ -295,6 +347,12 @@ export async function PUT(req: NextRequest) {
     if (tagNames && Array.isArray(tagNames)) {
       finalTagIds = await resolveTagIds(tagNames);
     }
+
+    const resolvedStatus = resolveArticleStatusForRole({
+      requestedStatus: status,
+      existingStatus: existing.status,
+      role: userRole,
+    });
 
     // Re-generate slug if title changed
     let slug = existing.slug;
@@ -315,9 +373,11 @@ export async function PUT(req: NextRequest) {
 
     // Handle publishedAt for PUBLISHED status
     let resolvedPublishedAt = existing.publishedAt;
-    if (publishedAt) {
+    if (resolvedStatus === "PENDING" || resolvedStatus === "DRAFT") {
+      resolvedPublishedAt = null;
+    } else if (publishedAt) {
       resolvedPublishedAt = new Date(publishedAt);
-    } else if (status === "PUBLISHED" && !existing.publishedAt) {
+    } else if (resolvedStatus === "PUBLISHED" && !existing.publishedAt) {
       resolvedPublishedAt = new Date();
     }
 
@@ -330,14 +390,20 @@ export async function PUT(req: NextRequest) {
         excerpt: excerpt !== undefined ? excerpt : existing.excerpt,
         type: type || existing.type,
         videoUrl: videoUrl !== undefined ? videoUrl : existing.videoUrl,
-        status: status || existing.status,
+        status: resolvedStatus,
         isBreaking: isBreaking !== undefined ? isBreaking : existing.isBreaking,
         isFeatured: isFeatured !== undefined ? isFeatured : existing.isFeatured,
         publishedAt: resolvedPublishedAt,
         categoryId: categoryId || existing.categoryId,
         featuredImageId: featuredImageId !== undefined ? featuredImageId : existing.featuredImageId,
         authorId: resolvedAuthorId,
-        editorId: editorId !== undefined ? editorId : existing.editorId,
+        editorId:
+          editorId !== undefined
+            ? editorId
+            : resolvedStatus === "PUBLISHED" &&
+              (userRole === "ADMIN" || userRole === "EDITOR")
+            ? sessionUserId
+            : existing.editorId,
         sumberName: sumberName !== undefined ? sumberName : existing.sumberName,
         sumberUrl: sumberUrl !== undefined ? sumberUrl : existing.sumberUrl,
         tags: finalTagIds !== undefined
@@ -350,6 +416,31 @@ export async function PUT(req: NextRequest) {
         category: { select: { id: true, name: true } },
         tags: { select: { id: true, name: true } },
       },
+    });
+
+    const action =
+      resolvedStatus === "PUBLISHED" && existing.status !== "PUBLISHED"
+        ? "PUBLISH_ARTICLE"
+        : resolvedStatus === "DRAFT" && existing.status === "PENDING"
+        ? "REJECT_ARTICLE"
+        : resolvedStatus === "PENDING"
+        ? "SUBMIT_ARTICLE"
+        : "UPDATE_ARTICLE";
+
+    const descriptionMap: Record<string, string> = {
+      PUBLISH_ARTICLE: `Menyetujui dan menerbitkan artikel: "${article.title}"`,
+      REJECT_ARTICLE: `Menolak artikel dan mengembalikan ke draft: "${article.title}"`,
+      SUBMIT_ARTICLE: `Mengajukan perubahan artikel untuk persetujuan: "${article.title}"`,
+      UPDATE_ARTICLE: `Memperbarui artikel: "${article.title}"`,
+    };
+
+    await logActivity({
+      userId: session.user.id,
+      action,
+      description: descriptionMap[action],
+      entityType: "Article",
+      entityId: article.id,
+      ipAddress: getRequestIp(req),
     });
 
     return NextResponse.json(article);
@@ -388,18 +479,12 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Check ownership for PENULIS
-    const userRole = (session.user as any)?.role;
-    const userId = (session.user as any)?.id;
-    if (userRole === "PENULIS" && existing.authorId !== userId) {
+    const userRole = session.user?.role;
+    if (userRole === "PENULIS") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (permanent) {
-      // Permanent delete - only ADMIN/EDITOR
-      if (userRole === "PENULIS") {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
       await db.article.delete({ where: { id } });
     } else {
       // Soft delete
@@ -408,6 +493,17 @@ export async function DELETE(req: NextRequest) {
         data: { deletedAt: new Date() },
       });
     }
+
+    await logActivity({
+      userId: session.user.id,
+      action: "DELETE_ARTICLE",
+      description: permanent
+        ? `Menghapus permanen artikel: "${existing.title}"`
+        : `Memindahkan artikel ke sampah: "${existing.title}"`,
+      entityType: "Article",
+      entityId: existing.id,
+      ipAddress: getRequestIp(req),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "src/lib/db";
 import { auth } from "src/auth";
 
@@ -8,7 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userRole = (session.user as any)?.role;
+  const userRole = session.user?.role;
   if (userRole !== "ADMIN" && userRole !== "EDITOR") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "25");
     const userId = searchParams.get("userId");
 
-    const where: any = {};
+    const where: Prisma.ActivityLogWhereInput = {};
     if (userId) where.userId = userId;
 
     const skip = (page - 1) * limit;

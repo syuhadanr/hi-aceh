@@ -1,12 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "src/lib/db";
 import { auth } from "src/auth";
+import { getRequestIp, logActivity } from "@/lib/activity-log";
 
 // Restore article from trash
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (session.user?.role === "PENULIS") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
@@ -30,6 +35,15 @@ export async function POST(req: NextRequest) {
     await db.article.update({
       where: { id },
       data: { deletedAt: null, status: "DRAFT" },
+    });
+
+    await logActivity({
+      userId: session.user?.id,
+      action: "RESTORE_ARTICLE",
+      description: `Memulihkan artikel dari sampah: "${existing.title}"`,
+      entityType: "Article",
+      entityId: existing.id,
+      ipAddress: getRequestIp(req),
     });
 
     return NextResponse.json({ success: true });

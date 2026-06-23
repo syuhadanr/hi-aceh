@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { auth } from "src/auth";
 import fs from "fs";
 import path from "path";
+import { getRequestIp, logActivity } from "@/lib/activity-log";
 
 const SETTINGS_FILE = path.join(process.cwd(), "src", "data", "settings.json");
 
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Settings modification only allowed for ADMIN / EDITOR
-  const role = (session.user as any)?.role;
+  const role = session.user?.role;
   if (role !== "ADMIN" && role !== "EDITOR") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -123,6 +124,15 @@ export async function POST(req: NextRequest) {
     }
 
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(updatedSettings, null, 2));
+
+    await logActivity({
+      userId: session.user?.id,
+      action: "UPDATE_SETTINGS",
+      description: "Memperbarui pengaturan sistem",
+      entityType: "Settings",
+      ipAddress: getRequestIp(req),
+    });
+
     return NextResponse.json(updatedSettings);
   } catch (error) {
     console.error("Settings update error:", error);
