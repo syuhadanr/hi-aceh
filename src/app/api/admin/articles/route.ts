@@ -225,10 +225,36 @@ export async function POST(req: NextRequest) {
       finalTagIds = await resolveTagIds(tagNames);
     }
 
-    const resolvedStatus = resolveArticleStatusForRole({
+    // Check for past scheduled dates BEFORE role resolution
+    let requestedPublishedAt: Date | null = null;
+    let shouldAutoPublish = false;
+    if (publishedAt && (status === "SCHEDULED" || status === "PUBLISHED")) {
+      requestedPublishedAt = new Date(publishedAt);
+      const now = new Date();
+      if (requestedPublishedAt <= now) {
+        // Past date: will auto-publish but keep the user-specified date
+        shouldAutoPublish = true;
+      }
+    }
+
+    let resolvedStatus = resolveArticleStatusForRole({
       requestedStatus: status,
       role: userRole,
     });
+
+    // If past date was scheduled, override to PUBLISHED and use the scheduled date
+    let finalPublishedAt: Date | null = null;
+    if (shouldAutoPublish && requestedPublishedAt) {
+      resolvedStatus = "PUBLISHED";
+      finalPublishedAt = requestedPublishedAt;
+    } else if ((resolvedStatus === "SCHEDULED" || resolvedStatus === "PENDING") && publishedAt) {
+      // Keep scheduled date for SCHEDULED articles or PENDING articles with a specified date
+      finalPublishedAt = new Date(publishedAt);
+    } else if (resolvedStatus === "PUBLISHED" && !publishedAt) {
+      // Publishing now without a specific date
+      finalPublishedAt = new Date();
+    }
+
     const resolvedEditorId =
       userRole === "ADMIN" || userRole === "EDITOR"
         ? editorId || (resolvedStatus === "PUBLISHED" ? sessionUserId : null)
@@ -245,12 +271,7 @@ export async function POST(req: NextRequest) {
         status: resolvedStatus,
         isBreaking: isBreaking || false,
         isFeatured: isFeatured || false,
-        publishedAt:
-          resolvedStatus === "SCHEDULED" && publishedAt
-            ? new Date(publishedAt)
-            : resolvedStatus === "PUBLISHED"
-            ? new Date()
-            : null,
+        publishedAt: finalPublishedAt,
         authorId: resolvedAuthorId,
         editorId: resolvedEditorId,
         sumberName: sumberName || null,
@@ -338,6 +359,18 @@ export async function PUT(req: NextRequest) {
     const userRole = session.user?.role;
     const sessionUserId = session.user?.id;
 
+    // Check for past scheduled dates BEFORE role resolution
+    let requestedPublishedAt: Date | null = null;
+    let shouldAutoPublish = false;
+    if (publishedAt && (status === "SCHEDULED" || status === "PUBLISHED")) {
+      requestedPublishedAt = new Date(publishedAt);
+      const now = new Date();
+      if (requestedPublishedAt <= now) {
+        // Past date: will auto-publish but keep the user-specified date
+        shouldAutoPublish = true;
+      }
+    }
+
     let resolvedAuthorId = existing.authorId;
     if ((userRole === "ADMIN" || userRole === "EDITOR") && authorId) {
       resolvedAuthorId = authorId;
@@ -353,6 +386,12 @@ export async function PUT(req: NextRequest) {
       existingStatus: existing.status,
       role: userRole,
     });
+
+    // If past date was scheduled, override to PUBLISHED and use the scheduled date
+    let finalStatus = resolvedStatus;
+    if (shouldAutoPublish && requestedPublishedAt) {
+      finalStatus = "PUBLISHED";
+    }
 
     // Re-generate slug if title changed
     let slug = existing.slug;
@@ -371,14 +410,25 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // Handle publishedAt for PUBLISHED status
+    // Handle publishedAt for SCHEDULED and PUBLISHED statuses
     let resolvedPublishedAt = existing.publishedAt;
-    if (resolvedStatus === "PENDING" || resolvedStatus === "DRAFT") {
+    if (finalStatus === "PENDING" || finalStatus === "DRAFT") {
       resolvedPublishedAt = null;
-    } else if (publishedAt) {
+    } else if (shouldAutoPublish && requestedPublishedAt) {
+      // Past date: use the user-specified date
+      resolvedPublishedAt = requestedPublishedAt;
+    } else if (finalStatus === "SCHEDULED" && publishedAt) {
+      // For SCHEDULED, use the provided publishedAt date
       resolvedPublishedAt = new Date(publishedAt);
-    } else if (resolvedStatus === "PUBLISHED" && !existing.publishedAt) {
+    } else if (finalStatus === "PUBLISHED" && publishedAt) {
+      // For PUBLISHED with explicit date, use that date
+      resolvedPublishedAt = new Date(publishedAt);
+    } else if (finalStatus === "PUBLISHED" && !publishedAt) {
+      // Publishing now without a scheduled date - set to current time
       resolvedPublishedAt = new Date();
+    } else if (publishedAt) {
+      // For other statuses with publishedAt, use it
+      resolvedPublishedAt = new Date(publishedAt);
     }
 
     const article = await db.article.update({
@@ -390,7 +440,7 @@ export async function PUT(req: NextRequest) {
         excerpt: excerpt !== undefined ? excerpt : existing.excerpt,
         type: type || existing.type,
         videoUrl: videoUrl !== undefined ? videoUrl : existing.videoUrl,
-        status: resolvedStatus,
+        status: finalStatus,
         isBreaking: isBreaking !== undefined ? isBreaking : existing.isBreaking,
         isFeatured: isFeatured !== undefined ? isFeatured : existing.isFeatured,
         publishedAt: resolvedPublishedAt,
@@ -400,7 +450,7 @@ export async function PUT(req: NextRequest) {
         editorId:
           editorId !== undefined
             ? editorId
-            : resolvedStatus === "PUBLISHED" &&
+            : finalStatus === "PUBLISHED" &&
               (userRole === "ADMIN" || userRole === "EDITOR")
             ? sessionUserId
             : existing.editorId,

@@ -236,11 +236,14 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
     }
   }, [session, isEditing, authorId]);
 
-  const handleSave = async (saveStatus?: string) => {
+  const handleSave = async (saveStatus?: string, publishedAtOverride?: string | null) => {
     setIsSaving(true);
 
     const finalStatus =
       isPenulis && saveStatus === "PUBLISHED" ? "PENDING" : saveStatus || status;
+
+    // Use override if provided, otherwise use state value
+    const publishedAtToUse = publishedAtOverride !== undefined ? publishedAtOverride : publishedAt;
 
     const payload = {
       id: articleId,
@@ -253,7 +256,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
       isBreaking,
       isFeatured,
       publishedAt:
-        finalStatus === "SCHEDULED" && publishedAt ? publishedAt : null,
+        finalStatus === "SCHEDULED" && publishedAtToUse ? publishedAtToUse : null,
       categoryId,
       featuredImageId: null,
       tagNames: tagInput.split(",").map((t) => t.trim()).filter(Boolean),
@@ -303,7 +306,9 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
         "info"
       );
     }
-    handleSave("PUBLISHED");
+    // If a scheduled date is set, save as SCHEDULED; otherwise save as PUBLISHED
+    const statusToSave = publishedAt ? "SCHEDULED" : "PUBLISHED";
+    handleSave(statusToSave);
   };
 
   const filteredTags = tags.filter((t) =>
@@ -383,7 +388,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
               className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              {isSaving ? "Menyimpan..." : isPenulis ? "Ajukan Publikasi" : "Publikasikan"}
+              {isSaving ? "Menyimpan..." : publishedAt ? (isPenulis ? "Ajukan Publikasi" : "Jadwalkan") : (isPenulis ? "Ajukan Publikasi" : "Publikasikan")}
             </button>
           </div>
         </div>
@@ -423,7 +428,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white shadow-sm transition-colors cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              {isSaving ? "Menyimpan..." : isPenulis ? "Ajukan Publikasi" : "Publikasikan"}
+              {isSaving ? "Menyimpan..." : publishedAt ? (isPenulis ? "Ajukan Publikasi" : "Jadwalkan") : (isPenulis ? "Ajukan Publikasi" : "Publikasikan")}
             </button>
           </div>
         </div>
@@ -650,6 +655,7 @@ export default function ArticleForm({ articleId }: ArticleFormProps) {
               <button
                 type="button"
                 onClick={() => {
+                  // Cancel the scheduled date and reset to DRAFT
                   setPublishedAt("");
                   setStatus("DRAFT");
                 }}
