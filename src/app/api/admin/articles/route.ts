@@ -3,6 +3,7 @@ import { ArticleStatus, Prisma } from "@prisma/client";
 import { db } from "src/lib/db";
 import { auth } from "src/auth";
 import { getRequestIp, logActivity } from "@/lib/activity-log";
+import { publishDueScheduledArticles } from "@/lib/article-scheduler";
 
 const ARTICLE_STATUSES = new Set<string>(Object.values(ArticleStatus));
 

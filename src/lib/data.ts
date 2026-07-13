@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { publishDueScheduledArticles } from "./article-scheduler";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -107,6 +108,8 @@ export function mapPrismaArticle(article: any) {
 }
 
 export async function getAllArticles() {
+  await publishDueScheduledArticles();
+
   const articles = await db.article.findMany({
     where: { status: "PUBLISHED", deletedAt: null },
     orderBy: { publishedAt: "desc" },
@@ -116,6 +119,8 @@ export async function getAllArticles() {
 }
 
 export async function getArticleBySlug(slug: string) {
+  await publishDueScheduledArticles();
+
   const article = await db.article.findFirst({
     where: { slug, status: "PUBLISHED", deletedAt: null },
     include: { author: true, category: true, tags: true, featuredImage: true },
@@ -124,6 +129,8 @@ export async function getArticleBySlug(slug: string) {
 }
 
 export async function getArticlesByCategory(categorySlug: string) {
+  await publishDueScheduledArticles();
+
   const mappedSlug = CATEGORY_SLUG_MAP[categorySlug.toLowerCase()] || categorySlug;
   const articles = await db.article.findMany({
     where: { category: { slug: mappedSlug.toLowerCase() }, status: "PUBLISHED", deletedAt: null },
@@ -134,6 +141,8 @@ export async function getArticlesByCategory(categorySlug: string) {
 }
 
 export async function getTrendingArticles() {
+  await publishDueScheduledArticles();
+
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -151,6 +160,8 @@ export async function getTrendingArticles() {
 }
 
 export async function getFeaturedArticles() {
+  await publishDueScheduledArticles();
+
   const articles = await db.article.findMany({
     where: { isFeatured: true, status: "PUBLISHED", deletedAt: null },
     orderBy: { publishedAt: "desc" },
@@ -160,6 +171,8 @@ export async function getFeaturedArticles() {
 }
 
 export async function getRelatedArticles(categoryName: string, currentSlug: string) {
+  await publishDueScheduledArticles();
+
   const articles = await db.article.findMany({
     where: { category: { name: categoryName }, slug: { not: currentSlug }, status: "PUBLISHED", deletedAt: null },
     orderBy: { publishedAt: "desc" },
