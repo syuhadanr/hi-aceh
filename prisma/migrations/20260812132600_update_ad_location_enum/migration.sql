@@ -1,9 +1,3 @@
--- DropForeignKey
-ALTER TABLE `_articletags` DROP FOREIGN KEY `_ArticleTags_A_fkey`;
-
--- DropForeignKey
-ALTER TABLE `_articletags` DROP FOREIGN KEY `_ArticleTags_B_fkey`;
-
 -- AlterTable
 ALTER TABLE `ads` ADD COLUMN `ratio` VARCHAR(191) NULL DEFAULT '1:1',
     ADD COLUMN `scriptCode` LONGTEXT NULL,
@@ -16,9 +10,6 @@ ALTER TABLE `ads` ADD COLUMN `ratio` VARCHAR(191) NULL DEFAULT '1:1',
 ALTER TABLE `articles` ADD COLUMN `editorId` VARCHAR(191) NULL,
     ADD COLUMN `sumberName` VARCHAR(191) NULL,
     ADD COLUMN `sumberUrl` VARCHAR(191) NULL;
-
--- DropTable
-DROP TABLE `_articletags`;
 
 -- CreateTable
 CREATE TABLE `activity_logs` (
@@ -51,15 +42,6 @@ CREATE TABLE `comments` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateTable
-CREATE TABLE `_ArticleTags` (
-    `A` VARCHAR(191) NOT NULL,
-    `B` VARCHAR(191) NOT NULL,
-
-    UNIQUE INDEX `_ArticleTags_AB_unique`(`A`, `B`),
-    INDEX `_ArticleTags_B_index`(`B`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
 -- CreateIndex
 CREATE INDEX `articles_editorId_idx` ON `articles`(`editorId`);
 
@@ -71,9 +53,3 @@ ALTER TABLE `articles` ADD CONSTRAINT `articles_editorId_fkey` FOREIGN KEY (`edi
 
 -- AddForeignKey
 ALTER TABLE `comments` ADD CONSTRAINT `comments_articleId_fkey` FOREIGN KEY (`articleId`) REFERENCES `articles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `_ArticleTags` ADD CONSTRAINT `_ArticleTags_A_fkey` FOREIGN KEY (`A`) REFERENCES `articles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `_ArticleTags` ADD CONSTRAINT `_ArticleTags_B_fkey` FOREIGN KEY (`B`) REFERENCES `tags`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
