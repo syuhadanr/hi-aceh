@@ -35,6 +35,14 @@ const LOCATION_LABELS: Record<string, string> = {
   ARTICLE_IN_CONTENT: "Di Dalam Konten / Isi (Halaman Artikel)",
   ARTICLE_END: "Bawah / Akhir Artikel (Halaman Artikel)",
   SIDEBAR: "Sidebar (Halaman Artikel)",
+  MOBILE_HEADER: "Bawah Header / Banner Atas Mobile (Beranda & Kategori)",
+  MOBILE_BELOW_HEADLINE: "Bawah Headline / Hero Utama Mobile (Beranda)",
+  MOBILE_FEED_1: "Feed Sisipan Banner 1 Mobile (Beranda)",
+  MOBILE_FEED_2: "Feed Sisipan Card 2 Mobile (Beranda)",
+  MOBILE_FEED_AFTER: "Antara Widget Mobile (Semua Halaman)",
+  MOBILE_ARTICLE_ABOVE: "Atas Judul Artikel Mobile (Halaman Artikel)",
+  MOBILE_ARTICLE_MIDDLE: "Di Dalam Konten / Isi Mobile (Halaman Artikel)",
+  MOBILE_ARTICLE_END: "Bawah / Akhir Artikel Mobile (Halaman Artikel)",
 };
 
 export default function AdsAdminPage() {

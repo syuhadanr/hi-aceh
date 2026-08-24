@@ -164,6 +164,7 @@ export default async function Home() {
           <div className="lg:col-span-8 order-1 lg:order-none">
             <MainNews articles={heroArticles} />
             <AdSlot position="MAIN_BELOW_HEADLINE" className="mt-8" />
+            <AdSlot position="MOBILE_BELOW_HEADLINE" className="mt-8" />
           </div>
 
           <div className="block lg:hidden order-2">

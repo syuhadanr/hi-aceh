@@ -47,6 +47,7 @@ const MOBILE_PLACEMENTS = [
     title: "Header / Kepala Halaman",
     options: [
       { value: "MOBILE_HEADER", label: "Bawah Header / Banner Atas (Beranda & Kategori)", sublabel: "Rasio Aspek 6:1" },
+      { value: "MOBILE_BELOW_HEADLINE", label: "Di Bawah Headline / Hero Utama (Beranda)", sublabel: "Rasio Aspek 4:3" },
     ]
   },
   {
